@@ -1,0 +1,35 @@
+﻿using DataAccessObjects;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Repositories.Interfaces;
+using Repositories;
+using Services.Interfaces;
+using Services.Mappers;
+using System.Reflection;
+
+namespace Services
+{
+    public static class ServiceConnfigure
+    {
+        public static IServiceCollection ConfigureService(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<SmartDietDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Unit of work DI
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            // Other service DI
+            services.AddScoped<IFoodService, FoodService>();
+            services.AddScoped<ICloudinaryService, CloudinaryService>();
+            //AutoMapper
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddMaps(Assembly.GetExecutingAssembly());
+                cfg.AllowNullDestinationValues = true;
+                cfg.AllowNullCollections = true;
+            });
+
+            return services;
+        }
+    }
+}
