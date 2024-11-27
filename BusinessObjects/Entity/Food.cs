@@ -33,7 +33,7 @@ namespace BusinessObjects.Entity
 
         public FoodCategory Category { get; set; }
 
-        public string Image { get; set; }
+        public string? Image { get; set; }
 
         // Navigation properties
         public ICollection<NutrientCategory> NutrientCategories { get; set; } = new List<NutrientCategory>();

@@ -4,6 +4,7 @@ using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessObjects.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    partial class SmartDietDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241127055213_fixImage")]
+    partial class fixImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

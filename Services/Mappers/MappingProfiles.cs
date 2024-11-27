@@ -14,7 +14,9 @@ namespace Services.Mappers
         public MappingProfiles()
         {
             // Food mapping
-            CreateMap<FoodDTO, Food>();
+            CreateMap<FoodDTO, Food>()
+                .ForMember(dest => dest.FoodAllergies, opt => opt.Ignore())
+                .ForMember(dest => dest.Image, opt => opt.Ignore());
 
             CreateMap<Food, FoodResponse>()
                 .ForMember(dest => dest.NutrientCategories, opt => opt
