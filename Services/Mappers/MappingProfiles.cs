@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObjects.Entity;
+using DTOs.AuthDTOs;
 using DTOs.FoodDTOs;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,8 @@ namespace Services.Mappers
             // Nutrient Category mapping
             CreateMap<NutrientCategory, NutrientCategoryResponse>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            // Auth
+            CreateMap<SmartDietUser,RegisterRequest>().ReverseMap();
         }
     }
 }
