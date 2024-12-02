@@ -14,6 +14,11 @@ namespace Services.Interfaces
         Task Register(RegisterRequest request);
         Task ChangePassword(ChangePasswordRequest request);
         Task ResetPassword(ResetPasswordRequest request);
-        Task ForgotPassword(string email);
+        Task ForgotPassword(EmailRequest request);
+        Task<AuthResponse> LoginGoogle(TokenGoogleRequest request);
+        Task VerifyOtp(ConfirmOtpRequest request, bool isResetPassword);
+        Task ResendConfirmationEmail(EmailRequest request);
+
+
     }
 }

@@ -2,6 +2,7 @@
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.AuthDTOs;
+using Google.Apis.Auth;
 using MailKit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -26,19 +27,23 @@ namespace Services
     {
         private readonly UserManager<SmartDietUser> _userManager;
         private readonly SignInManager<SmartDietUser> _signInManager;
-        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IConfiguration _configuration;
+        private readonly IMemoryCache _memoryCache;
+        private readonly IEmailService _emailService;
 
         public AuthService(UserManager<SmartDietUser> userManager,
                            SignInManager<SmartDietUser> signInManager,
-                           RoleManager<IdentityRole<Guid>> roleManager,
+                           RoleManager<IdentityRole> roleManager,
                            IConfiguration configuration,
                            IMapper mapper,
                            IUnitOfWork unitOfWork,
-                           IHttpContextAccessor contextAccessor)
+                           IHttpContextAccessor contextAccessor,
+                           IMemoryCache memoryCache,
+                           IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -47,7 +52,8 @@ namespace Services
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _roleManager = roleManager;
-            
+            _memoryCache = memoryCache;
+            _emailService = emailService;
         }
 
         private async Task<SmartDietUser> CheckRefreshToken(string refreshToken)
@@ -82,12 +88,12 @@ namespace Services
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.Sha256)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
             SecurityToken token = securityTokenHandler.CreateToken(securityTokenDescriptor);
             return (securityTokenHandler.WriteToken(token), roles);
-        }
+        }   
         private async Task<string> GenerateRefreshToken(SmartDietUser user)
         {
             string? refreshToken = Guid.NewGuid().ToString();
@@ -111,11 +117,16 @@ namespace Services
         {
             var user = await _userManager.FindByEmailAsync(request.Email)
             ??  throw new ErrorException(404,ErrorCode.NOT_FOUND,"User not found");
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new ErrorException(400, ErrorCode.BADREQUEST, "User not confirm");
+            }
             SignInResult result = await _signInManager.PasswordSignInAsync(user,request.Password, false,false);
             if (!result.Succeeded)
             {
                 throw new ErrorException(401, ErrorCode.UNAUTHORIZED, "Wrong password");
             }
+            
             _contextAccessor.HttpContext.Session.SetString("UserId",user.Id);
             (string token, IEnumerable<string> roles)  = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
@@ -156,9 +167,9 @@ namespace Services
 
         public async Task Register(RegisterRequest request)
         {
-            SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email)
-            ?? throw new ErrorException(400, ErrorCode.BADREQUEST, "Email have been registed");
-            var newUser = _mapper.Map<SmartDietUser>(request);
+            SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email);
+            if (user != null) { throw new ErrorException(400, ErrorCode.BADREQUEST, "Email have been registed");
+            } var newUser = _mapper.Map<SmartDietUser>(request);
             newUser.UserName = request.Email;
             IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
             if (result.Succeeded)
@@ -166,16 +177,52 @@ namespace Services
                 bool roleExist = await _roleManager.RoleExistsAsync("Member");
                 if (!roleExist)
                 {
-                    await _roleManager.CreateAsync(new IdentityRole<Guid> { Name = "Member" });
+                    await _roleManager.CreateAsync(new IdentityRole { Name = "Member" });
                 }
                 await _userManager.AddToRoleAsync(newUser, "Member");
+                string OTP = GenerateOTP();
+                string cacheKey = $"OTP_{request.Email}";
+                _memoryCache.Set(cacheKey, OTP,TimeSpan.FromMinutes(1));
+                await _emailService.SendEmailAsync(request.Email, "Confirm User", OTP);
             }
             else
             {
                 throw new ErrorException(500, ErrorCode.INTERNAL_SERVER_ERROR, $"Error when creating user {result.Errors.FirstOrDefault()?.Description}");
             }
         }
-
+        public async Task VerifyOtp(ConfirmOtpRequest request, bool isResetPassword)
+        {
+            string cacheKey = isResetPassword ? $"OTPResetPassword_{request.Email}" : $"OTP_{request.Email}";
+            if (_memoryCache.TryGetValue(cacheKey, out string memory))
+            {
+                if (memory == request.OTP)
+                {
+                    SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email);
+                    string? token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    await _userManager.ConfirmEmailAsync(user, token);
+                    _memoryCache.Remove(cacheKey);
+                }
+                else
+                {
+                    throw new ErrorException(500, ErrorCode.BADREQUEST, "Otp not valid");
+                }
+            }
+            else
+            {
+                throw new ErrorException(500, ErrorCode.BADREQUEST, "Otp not valid");
+            }
+        }
+        public async Task ResendConfirmationEmail(EmailRequest request)
+        {
+            var otp = GenerateOTP();
+            var cacheKey = $"OTP_{request.Email}";
+            if(_memoryCache.TryGetValue(cacheKey,out var memory)) 
+            {    
+                    throw new ErrorException(500, ErrorCode.BADREQUEST, "OTP have been sent");
+            }
+            _memoryCache.Set(cacheKey, otp,TimeSpan.FromMinutes(1));
+            await _emailService.SendEmailAsync(request.Email, "Confirm User", otp);
+        }
         public async Task ChangePassword(ChangePasswordRequest request)
         {
             string userId = _contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -193,6 +240,10 @@ namespace Services
             SmartDietUser user = await _userManager.FindByEmailAsync(request.Email)
             ?? throw new ErrorException(404, ErrorCode.NOT_FOUND, "User not found");
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new ErrorException(400, ErrorCode.BADREQUEST, "User not confirm");
+            }
             IdentityResult result = await _userManager.ResetPasswordAsync(user, token, request.Password);
             if (!result.Succeeded) 
             {
@@ -200,12 +251,68 @@ namespace Services
             }
         }
 
-        public async Task ForgotPassword(string email)
+        public async Task ForgotPassword(EmailRequest request)
         {
-            SmartDietUser? user = await _userManager.FindByEmailAsync(email)
+            SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email)
             ?? throw new ErrorException(400, ErrorCode.BADREQUEST, "User not found");
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new ErrorException(400, ErrorCode.BADREQUEST, "User not confirm");
+            }
+            string OTP = GenerateOTP();
+            string cacheKey = $"OTPResetPassword_{user.Email}";
+            _memoryCache.Set(cacheKey, OTP, TimeSpan.FromMinutes(1));
+            await _emailService.SendEmailAsync(user.Email, "Confirm User", OTP);
 
         }
+         public async Task<AuthResponse> LoginGoogle(TokenGoogleRequest request)
+        {
+            GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(request.token);
+            string email = payload.Email;
+            string providerKey = payload.Subject;
+            SmartDietUser? user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                user = _mapper.Map<SmartDietUser>(new { email });
+                user.Email = email;
+                var result = await _userManager.CreateAsync(user);
+                if (result.Succeeded)
+                {
+                    bool roleExist = await _roleManager.RoleExistsAsync("Member");
+                    if (!roleExist)
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole { Name = "Member" });
+                    }
+                    await _userManager.AddToRoleAsync(user, "Member");
+                    UserLoginInfo? info = new("Google",providerKey,"Google");
+                    IdentityResult identityResult = await _userManager.AddLoginAsync(user, info);
+                    if (!identityResult.Succeeded)
+                    {
+                            throw new ErrorException(500, ErrorCode.INTERNAL_SERVER_ERROR, $"Error when created user {identityResult.Errors.First().Description}");
+                    }
+                }
+                else
+                {
+                    throw new ErrorException(500, ErrorCode.INTERNAL_SERVER_ERROR, $"Error when created user {result.Errors.First().Description}");
+                }
+            }
+            (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
+            string refreshToken = await GenerateRefreshToken(user);
+            return new AuthResponse
+            {
+                AccessToken = token,
+                RefreshToken = refreshToken,
+                TokenType = "JWT",
+                AuthType = "Bearer",
+                ExpiresIn = DateTime.UtcNow.AddHours(1),
+                User = new UserInfo
+                {
+                    Email = user.Email,
+                    Roles = roles.ToList()
+                }
+            };
+        }
+        
 
     }
 }

@@ -1,8 +1,16 @@
-using BusinessObjects.Entity;
+﻿using BusinessObjects.Entity;
 using DataAccessObjects;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Services;
+using Services.Interfaces;
 using SmartDietAPI.MiddleWare;
+using System.Text;
 
 
 namespace SmartDietAPI
@@ -12,8 +20,11 @@ namespace SmartDietAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var configuration  = builder.Configuration;
             // Add services to the container.
             builder.Services.AddControllers();
+            builder.Services.AddMemoryCache();
             // Configure Identity
             builder.Services.AddIdentity<SmartDietUser, IdentityRole>(options =>
             {
@@ -27,14 +38,94 @@ namespace SmartDietAPI
             })
             .AddEntityFrameworkStores<SmartDietDbContext>()
             .AddDefaultTokenProviders();
-
+            //--------------------------
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidAudience = configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var authorizationHeader = context.HttpContext.Request.Headers["Authorization"];
+                            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                context.Token = authorizationHeader.ToString().Substring(7).Trim();
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
             // Configure Services
             builder.Services.ConfigureService(builder.Configuration);
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
-
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddTransient<IEmailService,EmailSevice>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            //------------------Swagger---------
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "SmartDiet.API", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+            //----------Authen google---------------------------------------------
+            //builder.Services.AddAuthentication(options =>
+            //{
+            //    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            //    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            //})
+            //    .AddCookie()
+            //   .AddGoogle(option =>
+            //   {
+            //       option.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENTID") ?? throw new Exception("GOOGLE_CLIENTID is not set");
+            //       option.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENTSECRET") ?? throw new Exception("GOOGLE_CLIENTSECRET is not set");
+            //       option.CallbackPath = "/signin-google";
+            //       option.SaveTokens = true;
+            //   });
+            //----------------------------------------------------------------------
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+                    options.TokenLifespan = TimeSpan.FromMinutes(30));
+            //-------------------------Token Provider-------------------------
+            builder.Services.AddDistributedMemoryCache(); // Cấu hình cache cho session
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30); // Thời gian timeout cho session
+                options.Cookie.HttpOnly = true; // Cookie chỉ có thể truy cập từ server
+                options.Cookie.IsEssential = true; // Cookie cần thiết cho ứng dụng
+            });
+            //---------------------------------------------------------------
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -43,19 +134,16 @@ namespace SmartDietAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            app.UseCors("AllowAllOrigins");
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseRouting();
 
             app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
             app.UseAuthentication();
-
+            app.UseAuthorization();
             app.MapControllers();
-
+            app.UseSession();
             app.Run();
         }
     }
