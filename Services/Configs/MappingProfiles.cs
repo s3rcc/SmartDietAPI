@@ -1,11 +1,8 @@
 ﻿using AutoMapper;
 using BusinessObjects.Entity;
+using DTOs.FavoriteDishDTOs;
+using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.Mappers
 {
@@ -13,7 +10,23 @@ namespace Services.Mappers
     {
         public MappingProfiles()
         {
-            // Food mapping
+            #region Favorite Dish Mappings
+            CreateMap<FavoriteDish, FavoriteDishResponse>()
+                .ForMember(dest => dest.DishId, opt => opt.MapFrom(src => src.DishId))
+                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+
+            CreateMap<FavoriteDishDTO, FavoriteDish>();
+            #endregion
+
+            #region Favorite Meal Mappings
+            CreateMap<FavoriteMeal, FavoriteMealResponse>()
+                .ForMember(dest => dest.MealId, opt => opt.MapFrom(src => src.MealId))
+                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+
+            CreateMap<FavoriteMealDTO, FavoriteMeal>();
+            #endregion
+
+            #region Food Mappings
             CreateMap<FoodDTO, Food>();
 
             CreateMap<Food, FoodResponse>()
@@ -23,17 +36,21 @@ namespace Services.Mappers
                     .MapFrom(src => src.FoodAllergies ?? new List<FoodAllergy>()))
                 .ForMember(dest => dest.Image, opt => opt
                     .MapFrom(src => src.Image ?? string.Empty));
+            #endregion
 
-            // Food Allergy mapping
+            #region Food Allergy Mappings
             CreateMap<FoodAllergy, FoodAllergyResponse>()
                 .ForMember(dest => dest.AllergenFoodId, opt => opt
                     .MapFrom(src => src.AllergenFoodId))
                 .ForMember(dest => dest.AllergenFoodName, opt => opt
                     .MapFrom(src => src.AllergenFood != null ? src.AllergenFood.Name : string.Empty));
+            #endregion
 
-            // Nutrient Category mapping
+            #region Nutrient Category Mappings
             CreateMap<NutrientCategory, NutrientCategoryResponse>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            #endregion
+
         }
     }
 }

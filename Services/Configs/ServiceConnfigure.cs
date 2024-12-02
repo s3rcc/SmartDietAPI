@@ -20,6 +20,9 @@ namespace Services
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI
             services.AddScoped<IFoodService, FoodService>();
+            services.AddScoped<IFavoriteMealService, FavoriteMealService>();
+            services.AddScoped<IFavoriteDishService, FavoriteDishService>();
+
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             //AutoMapper
             services.AddAutoMapper(cfg =>
