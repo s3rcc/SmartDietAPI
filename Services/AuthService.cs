@@ -184,6 +184,7 @@ namespace Services
                     EnableNotifications = true,
                     EnablePushNotifications = true,
                 });
+                await _unitOfWork.SaveChangeAsync();
                 bool roleExist = await _roleManager.RoleExistsAsync("Member");
                 if (!roleExist)
                 {
