@@ -174,6 +174,16 @@ namespace Services
             IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
             if (result.Succeeded)
             {
+                await _unitOfWork.Repository<UserProfile>().AddAsync(new UserProfile{
+                    SmartDietUserId = newUser.Id,
+                    FullName = request.Name,
+                    ProfilePicture = "",
+                    TimeZone = "UTC",
+                    PreferredLanguage = "en",
+                    EnableEmailNotifications = true,
+                    EnableNotifications = true,
+                    EnablePushNotifications = true,
+                });
                 bool roleExist = await _roleManager.RoleExistsAsync("Member");
                 if (!roleExist)
                 {
