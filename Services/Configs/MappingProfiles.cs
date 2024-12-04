@@ -23,17 +23,15 @@ namespace Services.Mappers
                 .ForMember(dest => dest.NutrientCategories, opt => opt
                     .MapFrom(src => src.NutrientCategories))
                 .ForMember(dest => dest.FoodAllergies, opt => opt
-                    .MapFrom(src => src.FoodAllergies));
-                    .MapFrom(src => src.FoodAllergies ?? new List<FoodAllergy>()))
+                    .MapFrom(src => src.FoodAllergies))
                 .ForMember(dest => dest.Image, opt => opt
-                    .MapFrom(src => src.Image ?? string.Empty));
+                    .MapFrom(src => src.Image));
             
             CreateMap<FoodAllergy, FoodAllergyResponse>()
                 .ForMember(dest => dest.AllergenFoodId, opt => opt
                     .MapFrom(src => src.AllergenFoodId))
                 .ForMember(dest => dest.AllergenFoodName, opt => opt
                     .MapFrom(src => src.AllergenFood));
-                    .MapFrom(src => src.AllergenFood != null ? src.AllergenFood.Name : string.Empty));
 
             CreateMap<NutrientCategory, NutrientCategoryResponse>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
