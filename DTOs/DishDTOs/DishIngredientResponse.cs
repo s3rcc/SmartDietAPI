@@ -1,20 +1,17 @@
-﻿using BusinessObjects.Base;
-using BusinessObjects.FixedData;
+﻿using BusinessObjects.FixedData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessObjects.Entity
+namespace DTOs.DishDTOs
 {
-    public class DishIngredient : BaseEntity
+    public class DishIngredientResponse
     {
-        public string DishId { get; set; }
         public string FoodId { get; set; }
+        public string FoodName { get; set; }
         public double Quantity { get; set; }
         public MeasurementUnit MeasurementUnit { get; set; }
-        public Dish Dish { get; set; }
-        public Food Food { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Entity;
+﻿using BusinessObjects.Base;
+using BusinessObjects.Entity;
 using DTOs.FoodDTOs;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
@@ -18,31 +19,31 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> GetFoods([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTearm = null)
         {
             var result = await _foodService.GetAllFoodsAsync(pageIndex, pageSize, searchTearm);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFoodById(string id)
         {
             var result = await _foodService.GetFoodByIdAsync(id);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
         }
         [HttpPost("create")]
         public async Task<IActionResult> AddFood(FoodDTO foodDTO)
         {
             await _foodService.CreateFoodAsync(foodDTO);
-            return Ok();
+            return Ok(ApiResponse<object>.Success(null, "Food created successfully", 201));
         }
-        [HttpPut("{foodId}")]
-        public async Task<IActionResult> UpdateFood(string foodId, FoodDTO foodDTO)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFood(string id, FoodDTO foodDTO)
         {
-            await _foodService.UpdateFoodAsync(foodId, foodDTO);
-            return Ok();
+            await _foodService.UpdateFoodAsync(id, foodDTO);
+            return Ok(ApiResponse<object>.Success(null, "Food updated successfully"));
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFood(string id)
         {
             await _foodService.DeleteFoodAsync(id);
-            return Ok();
+            return Ok(ApiResponse<object>.Success(null, "Food deleted successfully"));
         }
     }
 }

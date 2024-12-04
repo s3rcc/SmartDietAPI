@@ -3,13 +3,12 @@ using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.FoodDTOs;
-using MailKit.Search;
 using Microsoft.AspNetCore.Http;
-using Org.BouncyCastle.Asn1.X509;
 using Repositories.Interfaces;
 using Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,8 +31,11 @@ namespace Services
             try
             {
                 // Check if food name exist
-                var existingFood = await _unitOfWork.Repository<Food>().FindAsync(x => x.Name == foodDTO.Name)
-                    ?? throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                var existingFood = await _unitOfWork.Repository<Food>().FirstOrDefaultAsync(x => x.Name == foodDTO.Name);
+                if (existingFood != null)
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                };
                 // Create map
                 var food = _mapper.Map<Food>(foodDTO);
                 // Process image
@@ -41,16 +43,32 @@ namespace Services
                 {
                     food.Image = await _cloudinaryService.UploadImageAsync(foodDTO.Image);
                 }
+
                 // Set create time
                 food.CreatedTime = DateTime.UtcNow;
                 food.CreatedBy = "system";
                 await _unitOfWork.Repository<Food>().AddAsync(food);
                 await _unitOfWork.SaveChangeAsync();
 
+                // Handle Food Allergies
+                if (foodDTO.AllergenFoodIds != null && foodDTO.AllergenFoodIds.Any())
+                {
+                    var foodAllergies = foodDTO.AllergenFoodIds.Select(allergenId => new FoodAllergy
+                    {
+                        FoodId = food.Id,
+                        AllergenFoodId = allergenId,
+                        CreatedTime = DateTime.UtcNow,
+                        CreatedBy = "System"
+                    }).ToList();
+
+                    // Add food allergies
+                    await _unitOfWork.Repository<FoodAllergy>().AddRangeAsync(foodAllergies);
+                    await _unitOfWork.SaveChangeAsync();
+                }
             }
-            catch (Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
 
             }
         }
@@ -84,9 +102,9 @@ namespace Services
                 );
                 return _mapper.Map<IEnumerable<FoodResponse>>(foods);
             }
-            catch(Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
 
@@ -121,9 +139,9 @@ namespace Services
                 throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR,$"AutoMapper error: {ex.Message}");
                 // Optionally log the stack trace or inner exceptions
             }
-            catch (Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
 
@@ -139,9 +157,9 @@ namespace Services
                         ]);
                 return _mapper.Map<FoodResponse>(food);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
 
@@ -156,9 +174,9 @@ namespace Services
                         ]);
                 return _mapper.Map<IEnumerable<FoodResponse>>(foods);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
 
@@ -175,9 +193,9 @@ namespace Services
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Food does not exist!");
                 return _mapper.Map<FoodResponse>(food);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
 
@@ -189,8 +207,11 @@ namespace Services
                 var existingFood = await _unitOfWork.Repository<Food>().GetByIdAsync(foodId)
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Food does not exist!");
                 // Check if name and is not the current food exist
-                var existingName = await _unitOfWork.Repository<Food>().FirstOrDefaultAsync(x => x.Name == foodDTO.Name && x.Id != foodId)
-                    ?? throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                var existingName = await _unitOfWork.Repository<Food>().FirstOrDefaultAsync(x => x.Name == foodDTO.Name && x.Id != foodId);
+                if(existingName != null)
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                }
                 // Retrive old image
                 var oldImgUrl = existingFood.Image;
 
@@ -212,6 +233,31 @@ namespace Services
                     // Keep old image
                     food.Image = oldImgUrl;
                 }
+
+                // Handle Food Allergies
+                // First, remove existing allergies
+                if (existingFood.FoodAllergies != null && existingFood.FoodAllergies.Any())
+                {
+                    _unitOfWork.Repository<FoodAllergy>().DeleteRangeAsync(existingFood.FoodAllergies);
+                    await _unitOfWork.SaveChangeAsync();
+                }
+
+                // Add new allergies if provided
+                if (foodDTO.AllergenFoodIds != null && foodDTO.AllergenFoodIds.Any())
+                {
+                    var newAllergies = foodDTO.AllergenFoodIds.Select(allergenId => new FoodAllergy
+                    {
+                        FoodId = foodId,
+                        AllergenFoodId = allergenId,
+                        CreatedTime = DateTime.UtcNow,
+                        CreatedBy = "System"
+                    }).ToList();
+
+                    // Add new food allergies
+                    await _unitOfWork.Repository<FoodAllergy>().AddRangeAsync(newAllergies);
+                    await _unitOfWork.SaveChangeAsync();
+                }
+
                 // Set last updated time
                 food.LastUpdatedTime = DateTime.UtcNow;
                 //food.LastUpdatedBy = SmartDietUserId;
@@ -219,10 +265,11 @@ namespace Services
                 await _unitOfWork.SaveChangeAsync();
 
             }
-            catch(Exception ex)
+            catch
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
+
     }
 }

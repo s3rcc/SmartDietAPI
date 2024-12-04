@@ -32,5 +32,7 @@ namespace DTOs.FoodDTOs
         public FoodCategory Category { get; set; }
 
         public IFormFile? Image { get; set; }
+
+        public List<string>? AllergenFoodIds { get; set; }
     }
 }

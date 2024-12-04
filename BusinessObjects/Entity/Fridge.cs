@@ -11,7 +11,7 @@ namespace BusinessObjects.Entity
     public class Fridge : BaseEntity
     {
         [Required]
-        public int SmartDietUserId { get; set; }
+        public string SmartDietUserId { get; set; }
         public SmartDietUser SmartDietUser { get; set; }
         public string? FridgeModel { get; set; }
         public string? FridgeLocation { get; set; }

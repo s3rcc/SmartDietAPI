@@ -7,6 +7,7 @@ using Repositories;
 using Services.Interfaces;
 using Services.Mappers;
 using System.Reflection;
+//using Services.BackgroundServices;
 
 namespace Services
 {
@@ -20,7 +21,10 @@ namespace Services
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI
             services.AddScoped<IFoodService, FoodService>();
+            services.AddScoped<IDishService, DishService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
+            // Background service
+            //services.AddHostedService<DataCleanUpService>();
             //AutoMapper
             services.AddAutoMapper(cfg =>
             {

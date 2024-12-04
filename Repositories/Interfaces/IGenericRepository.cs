@@ -31,6 +31,7 @@ namespace Repositories.Interfaces
         Task AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
         Task UpdateAsync(T entity);
+        Task UpdateRangeAsync(IEnumerable<T> entities);
         void DeleteAsync(T entity);
         void DeleteRangeAsync(IEnumerable<T> entities);
         Task<IEnumerable<T>> FindAsync(

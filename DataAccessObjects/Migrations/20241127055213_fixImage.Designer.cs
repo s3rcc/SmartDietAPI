@@ -4,6 +4,7 @@ using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessObjects.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    partial class SmartDietDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241127055213_fixImage")]
+    partial class fixImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,12 +101,17 @@ namespace DataAccessObjects.Migrations
                     b.Property<DateTime?>("DeletedTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DishId")
+                    b.Property<int>("DishId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DishId1")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("FoodId")
-                        .IsRequired()
+                    b.Property<int>("FoodId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FoodId1")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LastUpdatedBy")
@@ -120,9 +128,9 @@ namespace DataAccessObjects.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DishId");
+                    b.HasIndex("DishId1");
 
-                    b.HasIndex("FoodId");
+                    b.HasIndex("FoodId1");
 
                     b.ToTable("DishIngredients");
                 });
@@ -342,13 +350,15 @@ namespace DataAccessObjects.Migrations
                     b.Property<DateTime?>("LastUpdatedTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("SmartDietUserId")
-                        .IsRequired()
+                    b.Property<int>("SmartDietUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SmartDietUserId1")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SmartDietUserId");
+                    b.HasIndex("SmartDietUserId1");
 
                     b.ToTable("Fridges");
                 });
@@ -968,15 +978,13 @@ namespace DataAccessObjects.Migrations
                 {
                     b.HasOne("BusinessObjects.Entity.Dish", "Dish")
                         .WithMany("DishIngredients")
-                        .HasForeignKey("DishId")
+                        .HasForeignKey("DishId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BusinessObjects.Entity.Food", "Food")
                         .WithMany()
-                        .HasForeignKey("FoodId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FoodId1");
 
                     b.Navigation("Dish");
 
@@ -1044,9 +1052,7 @@ namespace DataAccessObjects.Migrations
                 {
                     b.HasOne("BusinessObjects.Entity.SmartDietUser", "SmartDietUser")
                         .WithMany("Fridges")
-                        .HasForeignKey("SmartDietUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SmartDietUserId1");
 
                     b.Navigation("SmartDietUser");
                 });
