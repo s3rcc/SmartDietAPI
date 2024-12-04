@@ -2,12 +2,9 @@
 using BusinessObjects.Entity;
 using DTOs.AuthDTOs;
 using DTOs.DishDTOs;
+using DTOs.FavoriteDishDTOs;
+using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.Mappers
 {
@@ -15,6 +12,7 @@ namespace Services.Mappers
     {
         public MappingProfiles()
         {
+
             #region food
             // Food mapping
             CreateMap<FoodDTO, Food>()
@@ -26,20 +24,22 @@ namespace Services.Mappers
                     .MapFrom(src => src.NutrientCategories))
                 .ForMember(dest => dest.FoodAllergies, opt => opt
                     .MapFrom(src => src.FoodAllergies));
-
-            // Food Allergy mapping
+                    .MapFrom(src => src.FoodAllergies ?? new List<FoodAllergy>()))
+                .ForMember(dest => dest.Image, opt => opt
+                    .MapFrom(src => src.Image ?? string.Empty));
+            
             CreateMap<FoodAllergy, FoodAllergyResponse>()
                 .ForMember(dest => dest.AllergenFoodId, opt => opt
                     .MapFrom(src => src.AllergenFoodId))
                 .ForMember(dest => dest.AllergenFoodName, opt => opt
                     .MapFrom(src => src.AllergenFood));
+                    .MapFrom(src => src.AllergenFood != null ? src.AllergenFood.Name : string.Empty));
 
-            // Nutrient Category mapping
             CreateMap<NutrientCategory, NutrientCategoryResponse>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            
-            #endregion food
 
+            #endregion food
+            
             #region dish
             // Dish mapping
             CreateMap<DishDTO, Dish>()
@@ -61,6 +61,22 @@ namespace Services.Mappers
             
             // Auth
             CreateMap<SmartDietUser,RegisterRequest>().ReverseMap();
+
+            #region Favorite Dish Mappings
+            CreateMap<FavoriteDish, FavoriteDishResponse>()
+                .ForMember(dest => dest.DishId, opt => opt.MapFrom(src => src.DishId))
+                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+
+            CreateMap<FavoriteDishDTO, FavoriteDish>();
+            #endregion Favorite Dish Mappings
+
+            #region Favorite Meal Mappings
+            CreateMap<FavoriteMeal, FavoriteMealResponse>()
+                .ForMember(dest => dest.MealId, opt => opt.MapFrom(src => src.MealId))
+                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+
+            CreateMap<FavoriteMealDTO, FavoriteMeal>();
+            #endregion Favorite Meal Mappings
         }
     }
 }
