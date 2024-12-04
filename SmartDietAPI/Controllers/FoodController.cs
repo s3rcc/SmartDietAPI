@@ -33,10 +33,10 @@ namespace SmartDietAPI.Controllers
             await _foodService.CreateFoodAsync(foodDTO);
             return Ok(ApiResponse<object>.Success(null, "Food created successfully", 201));
         }
-        [HttpPut("{foodId}")]
-        public async Task<IActionResult> UpdateFood(string foodId, FoodDTO foodDTO)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFood(string id, FoodDTO foodDTO)
         {
-            await _foodService.UpdateFoodAsync(foodId, foodDTO);
+            await _foodService.UpdateFoodAsync(id, foodDTO);
             return Ok(ApiResponse<object>.Success(null, "Food updated successfully"));
         }
         [HttpDelete("{id}")]

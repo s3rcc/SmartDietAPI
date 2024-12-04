@@ -207,8 +207,11 @@ namespace Services
                 var existingFood = await _unitOfWork.Repository<Food>().GetByIdAsync(foodId)
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Food does not exist!");
                 // Check if name and is not the current food exist
-                var existingName = await _unitOfWork.Repository<Food>().FirstOrDefaultAsync(x => x.Name == foodDTO.Name && x.Id != foodId)
-                    ?? throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                var existingName = await _unitOfWork.Repository<Food>().FirstOrDefaultAsync(x => x.Name == foodDTO.Name && x.Id != foodId);
+                if(existingName != null)
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Food name already exist");
+                }
                 // Retrive old image
                 var oldImgUrl = existingFood.Image;
 
@@ -245,7 +248,9 @@ namespace Services
                     var newAllergies = foodDTO.AllergenFoodIds.Select(allergenId => new FoodAllergy
                     {
                         FoodId = foodId,
-                        AllergenFoodId = allergenId
+                        AllergenFoodId = allergenId,
+                        CreatedTime = DateTime.UtcNow,
+                        CreatedBy = "System"
                     }).ToList();
 
                     // Add new food allergies
@@ -265,5 +270,6 @@ namespace Services
                 throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "An error occured");
             }
         }
+
     }
 }

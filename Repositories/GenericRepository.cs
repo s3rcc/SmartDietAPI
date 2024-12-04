@@ -188,6 +188,18 @@ namespace Repositories
             _context.Entry(entity).State = EntityState.Modified;
         }
 
+        public async Task UpdateRangeAsync(IEnumerable<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (_context.Entry(entity).State == EntityState.Detached)
+                {
+                    _context.Set<T>().Attach(entity);
+                }
+                _context.Entry(entity).State = EntityState.Modified;
+            }
+        }
+
         public async Task<T> GetDeletedByIdAsync(string id, params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>().Where(x => x.DeletedTime.HasValue);
