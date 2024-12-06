@@ -5,6 +5,7 @@ using DTOs.DishDTOs;
 using DTOs.FavoriteDishDTOs;
 using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
+using DTOs.MealDTOs;
 
 namespace Services.Mappers
 {
@@ -56,7 +57,27 @@ namespace Services.Mappers
                 .ForMember(dest => dest.FoodName, opt => opt
                 .MapFrom(src => src.Food));
             #endregion dish
-            
+
+            #region meal
+            CreateMap<MealDTO, Meal>()
+                .ForMember(dest => dest.Image, opt => opt.Ignore());
+
+            CreateMap<Meal, MealResponse>()
+                .ForMember(dest => dest.MealDishes, opt => opt
+                .MapFrom(src => src.MealDishes))
+                .ForMember(dest => dest.Image, opt => opt
+                .MapFrom(src => src.Image));
+
+            CreateMap<MealDish, MealDishResponse>()
+                .ForMember(dest => dest.Id, opt => opt
+                .MapFrom(src => src.DishId))
+                .ForMember(dest => dest.Name, opt => opt
+                .MapFrom(src => src.Dish.Name))
+                .ForMember(dest => dest.Image, opt => opt
+                .MapFrom(src => src.Dish.Image));
+
+            #endregion meal
+
             // Auth
             CreateMap<SmartDietUser,RegisterRequest>().ReverseMap();
 
@@ -75,6 +96,8 @@ namespace Services.Mappers
 
             CreateMap<FavoriteMealDTO, FavoriteMeal>();
             #endregion Favorite Meal Mappings
+
+            
         }
     }
 }

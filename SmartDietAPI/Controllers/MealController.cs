@@ -1,0 +1,51 @@
+﻿using BusinessObjects.Base;
+using DTOs.MealDTOs;
+using Microsoft.AspNetCore.Mvc;
+using Services;
+using Services.Interfaces;
+using System.Security.Permissions;
+
+namespace SmartDietAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class MealController : Controller
+    {
+        private readonly IMealService _mealService;
+        public MealController(IMealService mealService)
+        {
+            _mealService = mealService;
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetMeals([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTearm = null)
+        {
+            var result = await _mealService.GetAllMealsAsync(pageIndex, pageSize, searchTearm);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMealById(string id)
+        {
+            var result = await _mealService.GetMealByIdAsync(id);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpPost("create")]
+        public async Task<IActionResult> AddMeal(MealDTO mealDTO)
+        {
+            await _mealService.CreateMealAsync(mealDTO);
+            return Ok(ApiResponse<object>.Success(null, "Meal created successfully", 201));
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateMeal(string id, MealDTO mealDTO)
+        {
+            await _mealService.UpdateMealAsync(id, mealDTO);
+            return Ok(ApiResponse<object>.Success(null, "Meal updated successfully"));
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMeal(string id)
+        {
+            await _mealService.DeleteMealAsync(id);
+            return Ok(ApiResponse<object>.Success(null, "Meal deleted successfully"));
+        }
+    }
+}
