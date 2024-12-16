@@ -26,6 +26,7 @@ namespace Services
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
+            services.AddScoped<IFridgeService, FridgeService>();
             // Background service
             //services.AddHostedService<DataCleanUpService>();
             //AutoMapper

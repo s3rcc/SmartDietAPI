@@ -5,6 +5,7 @@ using DTOs.DishDTOs;
 using DTOs.FavoriteDishDTOs;
 using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
+using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
 
 namespace Services.Mappers
@@ -97,7 +98,14 @@ namespace Services.Mappers
             CreateMap<FavoriteMealDTO, FavoriteMeal>();
             #endregion Favorite Meal Mappings
 
-            
+            #region fridge
+            CreateMap<FridgeDTO, Fridge>();
+            CreateMap<FridgeItemDTO, FridgeItem>();
+            CreateMap<Fridge, FridgeRespose>();
+            CreateMap<FridgeItem, FridgeItemResponse>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Food.Name));
+            #endregion fridge
+
         }
     }
 }
