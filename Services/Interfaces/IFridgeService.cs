@@ -14,8 +14,8 @@ namespace Services.Interfaces
         Task<IEnumerable<FridgeItemResponse>> GetAllItemsInFridge(string id);
         Task<FridgeItemResponse> GetItemById(string id);
         Task CreateFridgeAsync(FridgeDTO fridgeDTO);
-        Task UpdateFridgeAsync(string Id, FridgeDTO fridgeDTO);
-        Task DeleteFridgeAsync(string Id);
+        Task UpdateFridgeAsync(string id, FridgeDTO fridgeDTO);
+        Task DeleteFridgeAsync(string id);
         Task AddItemsToFridge(string fridgeId, List<FridgeItemDTO> fridgeItemDTOs);
         Task UpdateItemInFridge(string itemId, FridgeItemDTO fridgeItemDTO);
         Task RemoveItemsFromFridge(string fridgeId, string itemId);

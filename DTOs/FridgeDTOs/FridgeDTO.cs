@@ -8,7 +8,7 @@ namespace DTOs.FridgeDTOs
 {
     public class FridgeDTO
     {
-        public string? FidgeModel {  get; set; }
+        public string? FridgeModel {  get; set; }
         public string? FridgeLocation { get; set; }
     }
 }
