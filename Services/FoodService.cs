@@ -78,7 +78,21 @@ namespace Services
             try
             {
                 var food = await _unitOfWork.Repository<Food>().GetByIdAsync(foodId)
-                    ?? throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "Food does not exist!");
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Food does not exist!");
+                // Check if food is in dish
+                var dish = await _unitOfWork.Repository<DishIngredient>().FindAsync(x => x.FoodId == foodId);
+                if (dish.Any())
+                {
+                    throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, "Food is in one or more dishes!");
+                }
+
+                // Check if food is in fridge
+                var fridge = await _unitOfWork.Repository<FridgeItem>().FindAsync(x => x.FoodId == foodId);
+                if (fridge.Any())
+                {
+                    throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, "Food is in someone fridge!");
+                }
+
                 food.DeletedTime = DateTime.UtcNow;
                 //food.DeletedBy = Holder;
                 await _unitOfWork.Repository<Food>().UpdateAsync(food);

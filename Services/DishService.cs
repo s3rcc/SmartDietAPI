@@ -90,7 +90,22 @@ namespace Services
             // retrive existing dish
             var existingDish = await _unitOfWork.Repository<Dish>().GetByIdAsync(dishId,
                 includes: x => x.DishIngredients)
-                ?? throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Dish does not exist");
+                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Dish does not exist");
+
+            // Check if dish is in any meal
+            var meal = await _unitOfWork.Repository<MealDish>().FindAsync(x => x.DishId == dishId);
+            if (meal.Any())
+            {
+                throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, "Dish is in one or more meals!");
+            }
+
+            // Check if dish is favorited
+            var favDish = await _unitOfWork.Repository<FavoriteDish>().FindAsync(x => x.DishId == dishId);
+            if (favDish.Any())
+            {
+                throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, "Someone has this dish in their favorite!");
+            }
+
             // retrive dish ingredient
             var dishIngredient = existingDish.DishIngredients;
             // Delete dish

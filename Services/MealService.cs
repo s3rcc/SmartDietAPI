@@ -79,7 +79,14 @@ namespace Services
             try
             {
                 var meal = await _unitOfWork.Repository<Meal>().GetByIdAsync(id)
-                    ?? throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "Meal does not exist!");
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Meal does not exist!");
+
+                // Check if meal is favorited
+                var favMeal = await _unitOfWork.Repository<FavoriteMeal>().FindAsync(x => x.MealId == id);
+                if (favMeal.Any())
+                {
+                    throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, "Someone has this meal in their favorite!");
+                }
                 meal.DeletedTime = DateTime.UtcNow;
                 //meal.DeletedBy = Holder;
                 await _unitOfWork.Repository<Meal>().UpdateAsync(meal);
