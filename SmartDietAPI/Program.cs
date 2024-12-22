@@ -56,18 +56,7 @@ namespace SmartDietAPI
                         ValidAudience = configuration["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
                     };
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = context =>
-                        {
-                            var authorizationHeader = context.HttpContext.Request.Headers["Authorization"];
-                            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                            {
-                                context.Token = authorizationHeader.ToString().Substring(7).Trim();
-                            }
-                            return Task.CompletedTask;
-                        }
-                    };
+
                 });
             // Configure Services
             builder.Services.ConfigureService(builder.Configuration);
@@ -75,6 +64,7 @@ namespace SmartDietAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddSingleton<TokenValidationParameters>();
             builder.Services.AddTransient<IEmailService,EmailSevice>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             //------------------Swagger---------
@@ -135,10 +125,9 @@ namespace SmartDietAPI
                 app.UseSwaggerUI();
             }
             app.UseCors("AllowAllOrigins");
+            app.UseMiddleware<ValidationMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
-
             app.UseRouting();
-
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
