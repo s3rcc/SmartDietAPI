@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 
 namespace SmartDietAPI.MiddleWare
 {
@@ -18,14 +19,23 @@ namespace SmartDietAPI.MiddleWare
         public async Task Invoke(HttpContext context)
         {
             //var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-            var tokenCookie = context.Request.Cookies.TryGetValue("accessToken", out var cookie);
-            if (!string.IsNullOrEmpty(cookie))
+
+            var tokenCookie = context.Request.Cookies["accessToken"];
+            if(tokenCookie == null)
+            {
+                tokenCookie = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(tokenCookie) && tokenCookie.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    tokenCookie = tokenCookie.ToString().Substring(7).Trim();
+                }
+            }    
+            if (!string.IsNullOrEmpty(tokenCookie))
             {
                 var jwtTokenHandler = new JwtSecurityTokenHandler();
                 try
                 {
                     // Validate the token
-                    var tokenInVerification = jwtTokenHandler.ValidateToken(cookie, _tokenValidationParams, out var validatedToken);
+                    var tokenInVerification = jwtTokenHandler.ValidateToken(tokenCookie, _tokenValidationParams, out var validatedToken);
 
                     if (validatedToken is JwtSecurityToken jwtSecurityToken)
                     {
@@ -33,12 +43,14 @@ namespace SmartDietAPI.MiddleWare
 
                         if (!result)
                         {
-                            context.Items["Error"] = new ErrorException
-                            (
-                                    statusCode: 500,
-                                    errorCode: ErrorCode.BADREQUEST,
-                                   "Token is invalid."
-                            );
+                            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            var errorResponse = new
+                            {
+                                error = "invalid_token",
+                                error_description = "The signature key was not found or token is invalid."
+                            };
+                            await context.Response.WriteAsJsonAsync(errorResponse);
+                            return;
                         }
 
                         // Check if token has expired
@@ -48,33 +60,39 @@ namespace SmartDietAPI.MiddleWare
                             var expDateTime = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
                             if (expDateTime < DateTime.UtcNow)
                             {
-                                context.Items["Error"] = new ErrorException
-                                (
-                                    statusCode: 500,
-                                    errorCode:ErrorCode.BADREQUEST,
-                                    "Token has expired."
-                                );
+                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                                var errorResponse = new
+                                {
+                                    error = "expired_token",
+                                    error_description = "The token has expired."
+                                };
+                                await context.Response.WriteAsJsonAsync(errorResponse);
+                                return;
                             }
                         }
                     }
                 }
                 catch (SecurityTokenException ex)
                 {
-                    context.Items["Error"] = new ErrorException
-                    (
-                        statusCode: 500,
-                        errorCode: ErrorCode.BADREQUEST,
-                        "Token validation failed. Error: " + ex.Message
-                    );
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    var errorResponse = new
+                    {
+                        error = "invalid_token",
+                        error_description = "Token validation failed. Error: " + ex.Message
+                    };
+                    await context.Response.WriteAsJsonAsync(errorResponse);
+                    return;
                 }
                 catch (Exception ex)
                 {
-                    context.Items["Error"] = new ErrorException
-                    (
-                        statusCode: 500,
-                        errorCode: ErrorCode.BADREQUEST,
-                        "An error occurred while processing the token. Error: " + ex.Message
-                    );
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    var errorResponse = new
+                    {
+                        error = "invalid_token",
+                        error_description = "An error occurred while processing the token. Error: " + ex.Message
+                    };
+                    await context.Response.WriteAsJsonAsync(errorResponse);
+                    return;
                 }
             }
 
