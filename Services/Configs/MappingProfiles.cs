@@ -7,6 +7,7 @@ using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
+using DTOs.UserProfileDTos;
 
 namespace Services.Mappers
 {
@@ -81,6 +82,11 @@ namespace Services.Mappers
 
             // Auth
             CreateMap<SmartDietUser,RegisterRequest>().ReverseMap();
+            // User
+            CreateMap<UpdateUserProfileRequest,UserProfile>().ReverseMap();
+            // UserProfle
+            CreateMap<SmartDietUser, RegisterUserWithRoleRequest>().ReverseMap();
+            CreateMap<UserProfile, UserProfileResponse>().ReverseMap();
 
             #region Favorite Dish Mappings
             CreateMap<FavoriteDish, FavoriteDishResponse>()

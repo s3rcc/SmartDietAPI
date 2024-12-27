@@ -65,8 +65,6 @@ namespace SmartDietAPI
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSingleton<TokenValidationParameters>();
-            builder.Services.AddTransient<IEmailService,EmailSevice>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
             //------------------Swagger---------
             builder.Services.AddSwaggerGen(c =>
             {

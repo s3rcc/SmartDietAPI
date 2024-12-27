@@ -17,6 +17,9 @@ namespace Services
         {
             services.AddDbContext<SmartDietDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Email
+            services.AddTransient<IEmailService, EmailSevice>();
+
             // Unit of work DI
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI
@@ -27,6 +30,9 @@ namespace Services
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+
             // Background service
             //services.AddHostedService<DataCleanUpService>();
             //AutoMapper
