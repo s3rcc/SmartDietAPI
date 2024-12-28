@@ -8,6 +8,7 @@ namespace DTOs.AuthDTOs
 {
     public class AuthResponse
     {
+        public string AccessToken { get; set; }
         public UserInfo User { get; set; }
     }
 

@@ -7,6 +7,7 @@ using Repositories;
 using Services.Interfaces;
 using Services.Mappers;
 using System.Reflection;
+using Services.Configs;
 //using Services.BackgroundServices;
 
 namespace Services
@@ -19,7 +20,9 @@ namespace Services
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
             // Email
             services.AddTransient<IEmailService, EmailSevice>();
-
+            //seed
+            services.AddScoped<SeedAccount>();
+            //
             // Unit of work DI
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI

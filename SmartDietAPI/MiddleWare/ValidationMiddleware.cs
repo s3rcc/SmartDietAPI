@@ -20,22 +20,22 @@ namespace SmartDietAPI.MiddleWare
         {
             //var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-            var tokenCookie = context.Request.Cookies["accessToken"];
-            if(tokenCookie == null)
-            {
-                tokenCookie = context.Request.Headers["Authorization"];
-                if (!string.IsNullOrEmpty(tokenCookie) && tokenCookie.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                {
-                    tokenCookie = tokenCookie.ToString().Substring(7).Trim();
-                }
-            }    
-            if (!string.IsNullOrEmpty(tokenCookie))
+            var tokenCookie = context.Request.Cookies.TryGetValue("accessToken", out var cookie);
+            //if (cookie == null)
+            //{
+            //    cookie = context.Request.Headers["Authorization"];
+            //    if (!string.IsNullOrEmpty(cookie) && tokenCookie.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        cookie = cookie.ToString().Substring(7).Trim();
+            //    }
+            //}    
+            if (!string.IsNullOrEmpty(cookie))
             {
                 var jwtTokenHandler = new JwtSecurityTokenHandler();
                 try
                 {
                     // Validate the token
-                    var tokenInVerification = jwtTokenHandler.ValidateToken(tokenCookie, _tokenValidationParams, out var validatedToken);
+                    var tokenInVerification = jwtTokenHandler.ValidateToken(cookie, _tokenValidationParams, out var validatedToken);
 
                     if (validatedToken is JwtSecurityToken jwtSecurityToken)
                     {
