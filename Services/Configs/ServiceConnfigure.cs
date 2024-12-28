@@ -8,6 +8,8 @@ using Services.Interfaces;
 using Services.Mappers;
 using System.Reflection;
 using Services.Configs;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 //using Services.BackgroundServices;
 
 namespace Services
@@ -36,7 +38,20 @@ namespace Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
-
+            // jwt middleware
+            services.AddSingleton<TokenValidationParameters>(provider =>
+            {
+                return new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidAudience = configuration["Jwt:Issuer"],
+                    ValidIssuer = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    ClockSkew = TimeSpan.FromMinutes(60)
+                };
+            });
             // Background service
             //services.AddHostedService<DataCleanUpService>();
             //AutoMapper
