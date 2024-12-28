@@ -20,8 +20,8 @@ namespace SmartDietAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRoles()
         {
-            IEnumerable<RoleResponse> roles = await _roleService.GetRoles();
-            return Ok(ApiResponse<IEnumerable<RoleResponse>>.Success(roles));
+            List<RoleResponse> roles = await _roleService.GetRoles();
+            return Ok(ApiResponse<List<RoleResponse>>.Success(roles));
         }
     }
 }

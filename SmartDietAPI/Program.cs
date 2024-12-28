@@ -56,7 +56,7 @@ namespace SmartDietAPI
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = configuration["Jwt:Issuer"],
                         ValidAudience = configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
                     };
 
                 });
@@ -66,7 +66,19 @@ namespace SmartDietAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddSingleton<TokenValidationParameters>();
+            builder.Services.AddSingleton<TokenValidationParameters>(provider =>
+            {
+                return new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidAudience = configuration["Jwt:Issuer"],
+                    ValidIssuer = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    ClockSkew = TimeSpan.FromMinutes(60)
+                };
+            });
             //------------------Swagger---------
             builder.Services.AddSwaggerGen(c =>
             {

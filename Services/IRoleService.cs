@@ -9,6 +9,6 @@ namespace Services
 {
     public interface IRoleService
     {
-        Task<IEnumerable<RoleResponse>> GetRoles();
+        Task<List<RoleResponse>> GetRoles();
     }
 }

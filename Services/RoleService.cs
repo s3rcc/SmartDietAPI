@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Services
 {
-    public class RoleService
+    public class RoleService : IRoleService
     {
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
@@ -20,10 +20,10 @@ namespace Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<RoleResponse>> GetRoles()
+        public async Task<List<RoleResponse>> GetRoles()
         {
             List<IdentityRole> roles = await _roleManager.Roles.ToListAsync();
-            return _mapper.Map<IEnumerable<RoleResponse>>(roles);
+            return _mapper.Map<List<RoleResponse>>(roles);
         }
     }
 }

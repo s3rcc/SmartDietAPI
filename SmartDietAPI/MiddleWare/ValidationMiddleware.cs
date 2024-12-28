@@ -18,9 +18,9 @@ namespace SmartDietAPI.MiddleWare
 
         public async Task Invoke(HttpContext context)
         {
-            //var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-            var tokenCookie = context.Request.Cookies.TryGetValue("accessToken", out var cookie);
+            //var tokenCookie = context.Request.Cookies.TryGetValue("accessToken", out var cookie);
             //if (cookie == null)
             //{
             //    cookie = context.Request.Headers["Authorization"];
@@ -29,13 +29,13 @@ namespace SmartDietAPI.MiddleWare
             //        cookie = cookie.ToString().Substring(7).Trim();
             //    }
             //}    
-            if (!string.IsNullOrEmpty(cookie))
+            if (!string.IsNullOrEmpty(token))
             {
                 var jwtTokenHandler = new JwtSecurityTokenHandler();
                 try
                 {
                     // Validate the token
-                    var tokenInVerification = jwtTokenHandler.ValidateToken(cookie, _tokenValidationParams, out var validatedToken);
+                    var tokenInVerification = jwtTokenHandler.ValidateToken(token, _tokenValidationParams, out var validatedToken);
 
                     if (validatedToken is JwtSecurityToken jwtSecurityToken)
                     {

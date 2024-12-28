@@ -35,6 +35,7 @@ namespace Services
             services.AddScoped<IFridgeService, FridgeService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
 
             // Background service
             //services.AddHostedService<DataCleanUpService>();

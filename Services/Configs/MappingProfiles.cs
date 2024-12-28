@@ -7,7 +7,9 @@ using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
+using DTOs.RoleDTOs;
 using DTOs.UserProfileDTos;
+using Microsoft.AspNetCore.Identity;
 
 namespace Services.Mappers
 {
@@ -87,7 +89,8 @@ namespace Services.Mappers
             // UserProfle
             CreateMap<SmartDietUser, RegisterUserWithRoleRequest>().ReverseMap();
             CreateMap<UserProfile, UserProfileResponse>().ReverseMap();
-
+            // role
+            CreateMap<IdentityRole, RoleResponse>().ReverseMap();
             #region Favorite Dish Mappings
             CreateMap<FavoriteDish, FavoriteDishResponse>()
                 .ForMember(dest => dest.DishId, opt => opt.MapFrom(src => src.DishId))
