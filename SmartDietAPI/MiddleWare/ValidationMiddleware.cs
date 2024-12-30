@@ -1,4 +1,6 @@
-﻿using BusinessObjects.Exceptions;
+﻿using BusinessObjects.Entity;
+using BusinessObjects.Exceptions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -54,6 +56,24 @@ namespace SmartDietAPI.MiddleWare
                         }
 
                         // Check if token has expired
+                        var userClaim = jwtSecurityToken.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.NameId)?.Value;
+                        if (userClaim != null )
+                        {
+                            var userManager = context.RequestServices.GetRequiredService<UserManager<SmartDietUser>>();
+
+                            SmartDietUser? user = await userManager.FindByIdAsync(userClaim);
+                            if (user == null)
+                            {
+                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                                var errorResponse = new
+                                {
+                                    error = "invalid_token",
+                                    error_description = $" User {userClaim} not exist. Login again"
+                                };
+                                await context.Response.WriteAsJsonAsync(errorResponse);
+                                return;
+                            }
+                        }
                         var expClaim = jwtSecurityToken.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Exp)?.Value;
                         if (expClaim != null && long.TryParse(expClaim, out var exp))
                         {

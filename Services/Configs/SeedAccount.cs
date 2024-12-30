@@ -162,7 +162,7 @@ namespace Services.Configs
 
         private async Task AddUserProfile(UserProfile userProfile)
         {
-            if (!_context.UserProfiles.Any(p => p.CreatedBy == userProfile.CreatedBy))
+            if (!_context.UserProfiles.Any(p => p.FullName == userProfile.FullName))
             {
                 await _context.UserProfiles.AddAsync(userProfile);
                 await _context.SaveChangesAsync();
