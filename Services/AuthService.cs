@@ -55,7 +55,18 @@ namespace Services
             _memoryCache = memoryCache;
             _emailService = emailService;
         }
-
+        private void SetTokenInsideCookie(string name,string value, DateTimeOffset time, HttpContext context)
+        {
+            context.Response.Cookies.Append(name,value,
+            new CookieOptions
+            {
+                Expires = time,
+                HttpOnly = true,
+                IsEssential = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+            });
+        }
         private async Task<SmartDietUser> CheckRefreshToken(string refreshToken)
         {
             List<SmartDietUser> users = await _userManager.Users.ToListAsync();
@@ -71,7 +82,7 @@ namespace Services
         }
         private (string token, IEnumerable<string> roles) GenerateJwtToken(SmartDietUser user)
         {
-            byte[] key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            SecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]));
             List<Claim> claims = new List<Claim>
             {
                new Claim(ClaimTypes.NameIdentifier,user.Id),
@@ -88,12 +99,13 @@ namespace Services
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
             };
             JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
             SecurityToken token = securityTokenHandler.CreateToken(securityTokenDescriptor);
             return (securityTokenHandler.WriteToken(token), roles);
-        }   
+        }  
+        
         private async Task<string> GenerateRefreshToken(SmartDietUser user)
         {
             string? refreshToken = Guid.NewGuid().ToString();
@@ -106,6 +118,7 @@ namespace Services
             await _userManager.SetAuthenticationTokenAsync(user, "Default", "RefreshToken", refreshToken);
             return refreshToken;
         }
+
         private string GenerateOTP() 
         {
             Random random = new Random();
@@ -130,12 +143,11 @@ namespace Services
             _contextAccessor.HttpContext.Session.SetString("UserId",user.Id);
             (string token, IEnumerable<string> roles)  = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
+
+            SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
+
             return new AuthResponse {
-                    AccessToken = token,
-                    RefreshToken = refreshToken,
-                    TokenType = "Jwt",
-                    AuthType = "Bearer",
-                    ExpiresIn = DateTime.UtcNow.AddHours(1),
+                AccessToken = token,
                     User = new UserInfo
                     {
                         Email = user.Email,
@@ -150,13 +162,12 @@ namespace Services
             SmartDietUser user = await CheckRefreshToken(request.refreshToken);
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
+
+            SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
+
             return new AuthResponse
             {
                 AccessToken = token,
-                RefreshToken = refreshToken,
-                AuthType = "Bearer",
-                TokenType = "Jwt",
-                ExpiresIn = DateTime.UtcNow.AddHours(1),
                 User = new UserInfo
                 {
                     Email = user.Email,
@@ -183,6 +194,7 @@ namespace Services
                     EnableEmailNotifications = true,
                     EnableNotifications = true,
                     EnablePushNotifications = true,
+                    CreatedBy = newUser.Id,
                 });
                 await _unitOfWork.SaveChangeAsync();
                 bool roleExist = await _roleManager.RoleExistsAsync("Member");
@@ -309,13 +321,12 @@ namespace Services
             }
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
+
+            SetTokenInsideCookie("refreshToken", token, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
+
             return new AuthResponse
             {
                 AccessToken = token,
-                RefreshToken = refreshToken,
-                TokenType = "JWT",
-                AuthType = "Bearer",
-                ExpiresIn = DateTime.UtcNow.AddHours(1),
                 User = new UserInfo
                 {
                     Email = user.Email,
