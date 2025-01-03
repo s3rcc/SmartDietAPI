@@ -7,6 +7,9 @@ using Repositories;
 using Services.Interfaces;
 using Services.Mappers;
 using System.Reflection;
+using Services.Configs;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 //using Services.BackgroundServices;
 
 namespace Services
@@ -17,6 +20,11 @@ namespace Services
         {
             services.AddDbContext<SmartDietDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Email
+            services.AddTransient<IEmailService, EmailSevice>();
+            //seed
+            services.AddScoped<SeedAccount>();
+            //
             // Unit of work DI
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI
@@ -27,6 +35,23 @@ namespace Services
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
+            // jwt middleware
+            services.AddSingleton<TokenValidationParameters>(provider =>
+            {
+                return new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidAudience = configuration["Jwt:Issuer"],
+                    ValidIssuer = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    ClockSkew = TimeSpan.FromMinutes(60)
+                };
+            });
             // Background service
             //services.AddHostedService<DataCleanUpService>();
             //AutoMapper

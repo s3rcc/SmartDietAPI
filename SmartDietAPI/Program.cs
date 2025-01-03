@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Services;
+using Services.Configs;
 using Services.Interfaces;
 using SmartDietAPI.MiddleWare;
 using System.Text;
@@ -46,6 +47,7 @@ namespace SmartDietAPI
             })
                 .AddJwtBearer(options =>
                 {
+                    options.IncludeErrorDetails = true;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -54,7 +56,7 @@ namespace SmartDietAPI
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = configuration["Jwt:Issuer"],
                         ValidAudience = configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
                     };
 
                 });
@@ -64,9 +66,7 @@ namespace SmartDietAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddSingleton<TokenValidationParameters>();
-            builder.Services.AddTransient<IEmailService,EmailSevice>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
+
             //------------------Swagger---------
             builder.Services.AddSwaggerGen(c =>
             {
@@ -117,7 +117,22 @@ namespace SmartDietAPI
             });
             //---------------------------------------------------------------
             var app = builder.Build();
-
+            //seed
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var initialiser = scope.ServiceProvider.GetRequiredService<SeedAccount>();
+                    initialiser.InitialiseAsync().Wait();
+                    initialiser.SeedAsync().Wait();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while seeding the database.");
+                }
+            }
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

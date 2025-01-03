@@ -1,4 +1,6 @@
-﻿using BusinessObjects.Exceptions;
+﻿using BusinessObjects.Entity;
+using BusinessObjects.Exceptions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -18,24 +20,24 @@ namespace SmartDietAPI.MiddleWare
 
         public async Task Invoke(HttpContext context)
         {
-            //var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-            var tokenCookie = context.Request.Cookies["accessToken"];
-            if(tokenCookie == null)
-            {
-                tokenCookie = context.Request.Headers["Authorization"];
-                if (!string.IsNullOrEmpty(tokenCookie) && tokenCookie.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                {
-                    tokenCookie = tokenCookie.ToString().Substring(7).Trim();
-                }
-            }    
-            if (!string.IsNullOrEmpty(tokenCookie))
+            //var tokenCookie = context.Request.Cookies.TryGetValue("accessToken", out var cookie);
+            //if (cookie == null)
+            //{
+            //    cookie = context.Request.Headers["Authorization"];
+            //    if (!string.IsNullOrEmpty(cookie) && tokenCookie.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        cookie = cookie.ToString().Substring(7).Trim();
+            //    }
+            //}    
+            if (!string.IsNullOrEmpty(token))
             {
                 var jwtTokenHandler = new JwtSecurityTokenHandler();
                 try
                 {
                     // Validate the token
-                    var tokenInVerification = jwtTokenHandler.ValidateToken(tokenCookie, _tokenValidationParams, out var validatedToken);
+                    var tokenInVerification = jwtTokenHandler.ValidateToken(token, _tokenValidationParams, out var validatedToken);
 
                     if (validatedToken is JwtSecurityToken jwtSecurityToken)
                     {
@@ -54,6 +56,24 @@ namespace SmartDietAPI.MiddleWare
                         }
 
                         // Check if token has expired
+                        var userClaim = jwtSecurityToken.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.NameId)?.Value;
+                        if (userClaim != null )
+                        {
+                            var userManager = context.RequestServices.GetRequiredService<UserManager<SmartDietUser>>();
+
+                            SmartDietUser? user = await userManager.FindByIdAsync(userClaim);
+                            if (user == null)
+                            {
+                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                                var errorResponse = new
+                                {
+                                    error = "invalid_token",
+                                    error_description = $" User {userClaim} not exist. Login again"
+                                };
+                                await context.Response.WriteAsJsonAsync(errorResponse);
+                                return;
+                            }
+                        }
                         var expClaim = jwtSecurityToken.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Exp)?.Value;
                         if (expClaim != null && long.TryParse(expClaim, out var exp))
                         {

@@ -82,7 +82,7 @@ namespace Services
         }
         private (string token, IEnumerable<string> roles) GenerateJwtToken(SmartDietUser user)
         {
-            byte[] key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            SecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]));
             List<Claim> claims = new List<Claim>
             {
                new Claim(ClaimTypes.NameIdentifier,user.Id),
@@ -99,7 +99,7 @@ namespace Services
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
             };
             JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
             SecurityToken token = securityTokenHandler.CreateToken(securityTokenDescriptor);
@@ -144,10 +144,10 @@ namespace Services
             (string token, IEnumerable<string> roles)  = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("accessToken", token, DateTimeOffset.UtcNow.AddMinutes(5), _contextAccessor.HttpContext);
             SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
 
             return new AuthResponse {
+                AccessToken = token,
                     User = new UserInfo
                     {
                         Email = user.Email,
@@ -163,11 +163,11 @@ namespace Services
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("accessToken", token, DateTimeOffset.UtcNow.AddMinutes(5), _contextAccessor.HttpContext);
             SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
 
             return new AuthResponse
             {
+                AccessToken = token,
                 User = new UserInfo
                 {
                     Email = user.Email,
@@ -322,11 +322,11 @@ namespace Services
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("accessToken", token, DateTimeOffset.UtcNow.AddMinutes(5), _contextAccessor.HttpContext);
             SetTokenInsideCookie("refreshToken", token, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
 
             return new AuthResponse
             {
+                AccessToken = token,
                 User = new UserInfo
                 {
                     Email = user.Email,
