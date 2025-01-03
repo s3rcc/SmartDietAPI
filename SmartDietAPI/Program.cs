@@ -1,5 +1,7 @@
-﻿using BusinessObjects.Entity;
+﻿using BusinessObjects.Base;
+using BusinessObjects.Entity;
 using DataAccessObjects;
+using Google.Apis.Json;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Converters;
 using Services;
 using Services.Interfaces;
 using SmartDietAPI.MiddleWare;
@@ -23,7 +26,11 @@ namespace SmartDietAPI
 
             var configuration  = builder.Configuration;
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
             builder.Services.AddMemoryCache();
             // Configure Identity
             builder.Services.AddIdentity<SmartDietUser, IdentityRole>(options =>
@@ -71,6 +78,8 @@ namespace SmartDietAPI
                 });
             // Configure Services
             builder.Services.ConfigureService(builder.Configuration);
+            // Get meal recommendation settings
+            builder.Services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendation"));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -100,6 +109,7 @@ namespace SmartDietAPI
                     }
                 });
             });
+            builder.Services.AddSwaggerGenNewtonsoftSupport();
             //----------Authen google---------------------------------------------
             //builder.Services.AddAuthentication(options =>
             //{
