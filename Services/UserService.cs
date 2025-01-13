@@ -5,8 +5,10 @@ using BusinessObjects.Exceptions;
 using DTOs.AuthDTOs;
 using DTOs.DishDTOs;
 using DTOs.UserProfileDTos;
+using Google.Apis.Util;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Interfaces;
 using Services.Interfaces;
 using System;
@@ -51,7 +53,7 @@ namespace Services
             string? userId = _contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                 throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UNAUTHORIZED, "Token not valid");
 
-            SmartDietUser? user = await _userManager.FindByIdAsync(userId) ??
+            SmartDietUser? user = await _userManager.Users.Include(x => x.UserProfile).FirstOrDefaultAsync(x => x.Id == userId) ??
                 throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "User not exist");
 
             UserProfile userProfile = await _unitOfWork.Repository<UserProfile>().GetByIdAsync(user.UserProfile.Id);
@@ -73,8 +75,16 @@ namespace Services
 
             string? currentUser = _contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                 throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UNAUTHORIZED, "Token not valid. ");
-            
-            SmartDietUser? userExist = await _userManager.FindByIdAsync(userId) ??
+
+            var user = await _userManager.FindByIdAsync(currentUser)
+                ?? throw new Exception("Please login.");
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (!roles.Contains("Admin") && currentUser != userId)
+                throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "User does not have permission. ");
+
+            SmartDietUser? userExist = await _userManager.Users.Include(x => x.UserProfile).FirstOrDefaultAsync(x => x.Id == userId) ??
                 throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "User not found. ");
 
             UserProfile userProfile = await _unitOfWork.Repository<UserProfile>().GetByIdAsync(userExist.UserProfile.Id);
@@ -93,7 +103,7 @@ namespace Services
             string? userId = _contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                 throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UNAUTHORIZED, "Token not valid");
 
-            SmartDietUser? userExist = await _userManager.FindByIdAsync(userId) ??
+            SmartDietUser? userExist = await _userManager.Users.Include(x => x.UserProfile).FirstOrDefaultAsync(x => x.Id == userId) ??
                 throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "User not found. ");
 
             UserProfile userProfile = await _unitOfWork.Repository<UserProfile>().GetByIdAsync(userExist.UserProfile.Id);
