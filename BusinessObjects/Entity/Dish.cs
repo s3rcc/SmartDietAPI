@@ -17,6 +17,7 @@ namespace BusinessObjects.Entity
         public string Instruction { get; set; }
         public int PrepTimeMinutes { get; set; }
         public int CookingTimeMinutes { get; set; }
+        public DifficultyLevel Difficulty { get; set; }
         public RegionType RegionType { get; set; }
         public DietType? DietType { get; set; }
 

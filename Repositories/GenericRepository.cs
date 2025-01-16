@@ -98,13 +98,7 @@ namespace Repositories
             IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
 
             // Add Includes
-            if (includes != null)
-            {
-                foreach (var include in includes)
-                {
-                    query = query.Include(include);
-                }
-            }
+            query = ApplyIncludes(query, includes);
 
             // Apply OrderBy
             if (orderBy != null)
@@ -311,6 +305,23 @@ namespace Repositories
             }
 
             return await query.FirstOrDefaultAsync();
+        }
+
+        private IQueryable<T> ApplyIncludes(IQueryable<T> query, Expression<Func<T, object>>[] includes)
+        {
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) =>
+                {
+                    if (include.Body is MemberInitExpression memberInit)
+                    {
+                        var path = string.Join(".", memberInit.Bindings.Select(b => b.Member.Name));
+                        return current.Include(path);
+                    }
+                    return current.Include(include);
+                });
+            }
+            return query;
         }
     }
 }

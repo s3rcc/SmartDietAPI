@@ -4,6 +4,7 @@ using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessObjects.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    partial class SmartDietDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250103082959_add_meal_setting")]
+    partial class add_meal_setting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,9 +50,6 @@ namespace DataAccessObjects.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DietType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Difficulty")
                         .HasColumnType("int");
 
                     b.Property<string>("Image")
@@ -423,9 +423,6 @@ namespace DataAccessObjects.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<double>("AverageRating")
-                        .HasColumnType("float");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()

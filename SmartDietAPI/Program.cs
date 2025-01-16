@@ -69,8 +69,6 @@ namespace SmartDietAPI
                 });
             // Configure Services
             builder.Services.ConfigureService(builder.Configuration);
-            // Get meal recommendation settings
-            builder.Services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendation"));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

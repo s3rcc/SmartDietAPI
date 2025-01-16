@@ -10,6 +10,7 @@ using System.Reflection;
 using Services.Configs;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using BusinessObjects.Base;
 //using Services.BackgroundServices;
 
 namespace Services
@@ -25,6 +26,8 @@ namespace Services
             //seed
             services.AddScoped<SeedAccount>();
             //
+            services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendationSettings"));
+
             // Unit of work DI
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             // Other service DI
@@ -38,6 +41,7 @@ namespace Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IRecommendationService, RecommendationService>();
             // jwt middleware
             services.AddSingleton<TokenValidationParameters>(provider =>
             {
