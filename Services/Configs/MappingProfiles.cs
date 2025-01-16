@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObjects.Entity;
+using BusinessObjects.FixedData;
 using DTOs.AuthDTOs;
 using DTOs.DishDTOs;
 using DTOs.FavoriteDishDTOs;
@@ -8,6 +9,8 @@ using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
 using DTOs.RoleDTOs;
+using DTOs.UserFeedbackDTOs;
+using DTOs.UserPreferenceDTOs;
 using DTOs.UserProfileDTos;
 using Microsoft.AspNetCore.Identity;
 
@@ -97,7 +100,7 @@ namespace Services.Mappers
                 .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
 
             CreateMap<FavoriteDishDTO, FavoriteDish>();
-            #endregion Favorite Dish Mappings
+            #endregion 
 
             #region Favorite Meal Mappings
             CreateMap<FavoriteMeal, FavoriteMealResponse>()
@@ -106,6 +109,40 @@ namespace Services.Mappers
 
             CreateMap<FavoriteMealDTO, FavoriteMeal>();
             #endregion Favorite Meal Mappings
+
+            #region User Preference Mapping
+            CreateMap<UserPreference, UserPreferenceResponse>()
+                .ForMember(x => x.SmartDietUserId, y => y.MapFrom(src => src.SmartDietUserId))
+                .ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => src.PrimaryDietType.ToString()))
+                .ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => src.PrimaryRegionType.ToString()))
+                .ForMember(x => x.DailyMealCount, y => y.MapFrom(src => src.DailyMealCount))
+                .ForMember(x => x.DishesPerMealCount, y => y.MapFrom(src => src.DishesPerMealCount))
+                .ForMember(x => x.MaxCookingTime, y => y.MapFrom(src => src.MaxCookingTime))
+                .ForMember(x => x.MaxRecipeDifficulty, y => y.MapFrom(src => src.MaxRecipeDifficulty.ToString()))
+                .ForMember(x => x.NotifyLowInventory, y => y.MapFrom(src => src.NotifyLowInventory))
+                .ForMember(x => x.LowInventoryThreshold, y => y.MapFrom(src => src.LowInventoryThreshold));
+
+            CreateMap<UserPreferenceDTO, UserPreference>()
+                .ForMember(x => x.SmartDietUserId, y => y.MapFrom(src => src.SmartDietUserId))
+                .ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => Enum.Parse<DietType>(src.PrimaryDietType)))
+                .ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => Enum.Parse<RegionType>(src.PrimaryRegionType)))
+                .ForMember(x => x.DailyMealCount, y => y.MapFrom(src => src.DailyMealCount))
+                .ForMember(x => x.DishesPerMealCount, y => y.MapFrom(src => src.DishesPerMealCount))
+                .ForMember(x => x.MaxCookingTime, y => y.MapFrom(src => src.MaxCookingTime))
+                .ForMember(x => x.MaxRecipeDifficulty, y => y.MapFrom(src => Enum.Parse<DifficultyLevel>(src.MaxRecipeDifficulty)))
+                .ForMember(x => x.NotifyLowInventory, y => y.MapFrom(src => src.NotifyLowInventory))
+                .ForMember(x => x.LowInventoryThreshold, y => y.MapFrom(src => src.LowInventoryThreshold));
+            #endregion
+
+            #region User Feedback Mappings
+            CreateMap<UserFeedback, UserFeedbackResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId))
+                .ForMember(dest => dest.StarRating, opt => opt.MapFrom(src => src.StarRating))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment));
+
+            CreateMap<UserFeedbackDTO, UserFeedback>();
+            #endregion 
 
             #region fridge
             CreateMap<FridgeDTO, Fridge>();

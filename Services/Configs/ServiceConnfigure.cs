@@ -34,10 +34,16 @@ namespace Services
             services.AddScoped<IFoodService, FoodService>();
             services.AddScoped<IDishService, DishService>();
             services.AddScoped<IMealService, MealService>();
+
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
+
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();
+
+            services.AddScoped<IUserPreferenceService, UserPreferenceService>();
+            services.AddScoped<IUserFeedbackService, UserFeedbackService>();
+
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
