@@ -14,6 +14,7 @@ namespace BusinessObjects.Entity
         public string Description { get; set; }
         public DietType DietType { get; set; }
         public string? Image { get; set; }
+        public double AverageRating { get; set; } = 0;
         public ICollection<FavoriteMeal>? FavoriteMeals { get; set; }
         public ICollection<MealDish> MealDishes { get; set; }
     }

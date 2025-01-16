@@ -33,6 +33,8 @@ namespace DataAccessObjects
         public DbSet<NutrientCategory> NutrientCategories { get; set; }
         public DbSet<Fridge> Fridges { get; set; }
         public DbSet<FridgeItem> FridgeItems { get; set; }
+        public DbSet<MealRecommendationHistory> MealRecommendationHistories { get; set; }
+        public DbSet<UserMealInteraction> UserMealInteractions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FoodAllergy>()
