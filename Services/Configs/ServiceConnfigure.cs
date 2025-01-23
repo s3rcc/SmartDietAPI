@@ -20,7 +20,9 @@ namespace Services
         public static IServiceCollection ConfigureService(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<SmartDietDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"), 
+                    b => b.MigrationsAssembly("SmartDietAPI")));
             // Email
             services.AddTransient<IEmailService, EmailSevice>();
             //seed

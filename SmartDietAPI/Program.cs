@@ -73,7 +73,16 @@ namespace SmartDietAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-
+            //------------------CORS---------
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins", policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
             //------------------Swagger---------
             builder.Services.AddSwaggerGen(c =>
             {
@@ -147,7 +156,12 @@ namespace SmartDietAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            // Apply CORS in the middleware pipeline
             app.UseCors("AllowAllOrigins");
+
+
+
             app.UseMiddleware<ValidationMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseRouting();

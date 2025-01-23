@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartDietAPI", "SmartDietAPI\SmartDietAPI.csproj", "{1AF13D64-3CA5-479C-8173-95839C0BEA7C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{93608582-9398-4AE0-951A-888CB79FAE02} = {93608582-9398-4AE0-951A-888CB79FAE02}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessObjects", "BusinessObjects\BusinessObjects.csproj", "{69C9B296-8E98-4F4A-8287-E5F0569C5D3A}"
 EndProject
@@ -15,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Repositories", "Repositorie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cores", "Cores\Cores.csproj", "{595F6F01-166F-49B6-8BC3-F6F539D11F30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOs", "DTOs\DTOs.csproj", "{BAA93181-459F-4B6C-A9B9-CBB04481385C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DTOs", "DTOs\DTOs.csproj", "{BAA93181-459F-4B6C-A9B9-CBB04481385C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
