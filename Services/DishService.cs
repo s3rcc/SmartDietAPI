@@ -31,11 +31,11 @@ namespace Services
             try
             {
                 // Check if dish name already exist
-                var existingName = await _unitOfWork.Repository<Dish>().FirstOrDefaultAsync(x => x.Name == dishDTO.Name);
+/*                var existingName = await _unitOfWork.Repository<Dish>().FirstOrDefaultAsync(x => x.Name == dishDTO.Name);
                 if(existingName != null)
                 {
                     throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Dish name already exist");
-                }
+                }*/
                 // Create map
                 var dish = _mapper.Map<Dish>(dishDTO);
                 // Process image

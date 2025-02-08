@@ -143,6 +143,11 @@ namespace SmartDietAPI
                     var initialiser = scope.ServiceProvider.GetRequiredService<SeedAccount>();
                     initialiser.InitialiseAsync().Wait();
                     initialiser.SeedAsync().Wait();
+
+/*                    var dataSeeder = services.GetRequiredService<SeedData>();
+                    dataSeeder.InitialiseAsync().Wait();  // Ensure required dependencies are in place
+                    dataSeeder.SeedAsync().Wait();*/
+
                 }
                 catch (Exception ex)
                 {

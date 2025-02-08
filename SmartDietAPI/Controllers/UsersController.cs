@@ -42,7 +42,7 @@ namespace SmartDietAPI.Controllers
             return Ok(ApiResponse<object>.Success("Delete user successfully"));
         }
         [HttpGet("profile")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetUserProfile()
         {
             var userProfile = await _userService.GetUserProfile();

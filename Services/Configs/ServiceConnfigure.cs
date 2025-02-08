@@ -27,6 +27,7 @@ namespace Services
             services.AddTransient<IEmailService, EmailSevice>();
             //seed
             services.AddScoped<SeedAccount>();
+                //services.AddScoped<SeedData>();
             //
             services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendationSettings"));
 

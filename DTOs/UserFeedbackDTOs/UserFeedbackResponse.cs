@@ -8,9 +8,11 @@ namespace DTOs.UserFeedbackDTOs
 {
     public class UserFeedbackResponse
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
-        public string SmartDietUserId { get; set; }
+        public string SmartDietUserId { get; set; } = string.Empty;
+
+        //public string SmartDietUserName { get; set; } = string.Empty;
 
         public int StarRating { get; set; }
 
