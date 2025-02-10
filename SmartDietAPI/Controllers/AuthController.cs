@@ -66,7 +66,7 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> ConfirmOTPResetPassword(ConfirmOtpRequest request)
         {
             await _authService.VerifyOtp(request, true);
-            return Ok("Change password successfully");
+            return Ok("Redirect to reset password");
         }
 
 

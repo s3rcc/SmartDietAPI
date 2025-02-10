@@ -49,7 +49,7 @@ namespace SmartDietAPI.Controllers
             return Ok(ApiResponse<object>.Success(userProfile));
         }
         [HttpGet("all")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetUserProfiles([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTearm = null)
         {
             var result = await _userService.GetAllUserProfileAsync(pageIndex, pageSize, searchTearm);
