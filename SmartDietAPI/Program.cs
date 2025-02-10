@@ -25,6 +25,8 @@ namespace SmartDietAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.WebHost.UseUrls("https://0.0.0.0:7095");
+
             var configuration  = builder.Configuration;
             // Add services to the container.
             builder.Services.AddControllers()
@@ -123,6 +125,23 @@ namespace SmartDietAPI
                 options.Cookie.HttpOnly = true; // Cookie chỉ có thể truy cập từ server
                 options.Cookie.IsEssential = true; // Cookie cần thiết cho ứng dụng
             });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins", builder =>
+                {
+                    builder
+                        //.WithOrigins("exp://192.168.2.8:8082",
+                        //"http://localhost:19006",
+                        //"http://172.168.3.160:19006",
+                        //"http://localhost:8082")
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                        //.AllowCredentials();
+                });
+            });
+
             //---------------------------------------------------------------
             var app = builder.Build();
             //seed
@@ -147,6 +166,8 @@ namespace SmartDietAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            
+
             app.UseCors("AllowAllOrigins");
             app.UseMiddleware<ValidationMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
