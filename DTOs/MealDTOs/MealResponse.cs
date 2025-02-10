@@ -9,6 +9,7 @@ namespace DTOs.MealDTOs
 {
     public class MealResponse
     {
+        public string Id { get; set; }
         public string Name {  get; set; }
         public string Description { get; set; }
         public DietType DietType { get; set; }
