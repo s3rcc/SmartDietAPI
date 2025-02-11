@@ -25,7 +25,7 @@ namespace SmartDietAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.WebHost.UseUrls("https://0.0.0.0:7095");
+            //builder.WebHost.UseUrls("https://0.0.0.0:7095");
 
             var configuration  = builder.Configuration;
             // Add services to the container.
