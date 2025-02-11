@@ -162,7 +162,7 @@ namespace SmartDietAPI
             }
             // Configure the HTTP request pipeline.
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SearchApi v1"));
 
             
 
