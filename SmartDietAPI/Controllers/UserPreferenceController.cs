@@ -1,4 +1,5 @@
-﻿using DTOs.FavoriteMealDTOs;
+﻿using BusinessObjects.Base;
+using DTOs.FavoriteMealDTOs;
 using DTOs.UserPreferenceDTOs;
 using Microsoft.AspNetCore.Mvc;
 using Services;
@@ -17,25 +18,25 @@ namespace SmartDietAPI.Controllers
             _userPreferenceService = userPreferenceService;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserPreferenceById(string id)
+        [HttpGet()]
+        public async Task<IActionResult> GetUserPreferenceById()
         {
-            var result = await _userPreferenceService.GetUserPreferenceByIdAsync(id);
-            return Ok(result);
+            var result = await _userPreferenceService.GetUserPreferenceByIdAsync();
+            return Ok(ApiResponse<object>.Success(result));
         }
 
         [HttpPost("create")]
         public async Task<IActionResult> AddUserPreference(UserPreferenceDTO userPreferenceDto)
         {
             await _userPreferenceService.CreateUserPreferenceAsync(userPreferenceDto);
-            return Ok();
+            return Ok(ApiResponse<object>.Success(null, "Preference created successfully", 201));
         }
 
-        [HttpPut("{userPreferenceId}")]
-        public async Task<IActionResult> UpdateUserPreference(string userPreferenceId, UserPreferenceDTO userPreferenceDto)
+        [HttpPut()]
+        public async Task<IActionResult> UpdateUserPreference(UserPreferenceDTO userPreferenceDto)
         {
-            await _userPreferenceService.UpdateUserPreferenceAsync(userPreferenceId, userPreferenceDto);
-            return Ok();
+            await _userPreferenceService.UpdateUserPreferenceAsync(userPreferenceDto);
+            return Ok(ApiResponse<object>.Success(null, "Preference updated successfully"));
         }
     }
 }

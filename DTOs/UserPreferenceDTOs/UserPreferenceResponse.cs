@@ -9,7 +9,6 @@ namespace DTOs.UserPreferenceDTOs
     public class UserPreferenceResponse
     {
         public string Id { get; set; }
-        public string SmartDietUserId { get; set; }
 
         // Dietary Preferences
         public string PrimaryDietType { get; set; }

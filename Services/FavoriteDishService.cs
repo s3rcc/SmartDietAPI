@@ -14,11 +14,13 @@ namespace Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public FavoriteDishService(IUnitOfWork unitOfWork, IMapper mapper)
+        public FavoriteDishService(IUnitOfWork unitOfWork, IMapper mapper, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         public async Task<FavoriteDishResponse> GetFavoriteDishByIdAsync(string id)
@@ -28,6 +30,10 @@ namespace Services
                 var favoriteDish = await _unitOfWork.Repository<FavoriteDish>().GetByIdAsync(id, includes: x => x.Dish)
                                   ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Favorite Dish not found!");
                 return _mapper.Map<FavoriteDishResponse>(favoriteDish);
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -39,10 +45,17 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var favoriteDishes = await _unitOfWork
                     .Repository<FavoriteDish>()
-                    .GetAllAsync(includes: x => x.Dish);
+                    .FindAsync(
+                    x => x.CreatedBy == userId,
+                    includes: x => x.Dish);
                 return _mapper.Map<IEnumerable<FavoriteDishResponse>>(favoriteDishes);
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -54,6 +67,7 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var favoriteDishes = await _unitOfWork.Repository<FavoriteDish>().GetAllWithPaginationAsync(
                     pageIndex,
                     pageSize,
@@ -92,6 +106,7 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var existingFavoriteDish = await _unitOfWork.Repository<FavoriteDish>().FindAsync(
                 x => x.SmartDietUserId == favoriteDishDTO.SmartDietUserId && x.DishId == favoriteDishDTO.DishId);
 
@@ -103,10 +118,14 @@ namespace Services
 
                 var favoriteDish = _mapper.Map<FavoriteDish>(favoriteDishDTO);
                 favoriteDish.CreatedTime = DateTime.UtcNow;
-                favoriteDish.CreatedBy = "system";
+                favoriteDish.CreatedBy = userId;
 
                 await _unitOfWork.Repository<FavoriteDish>().AddAsync(favoriteDish);
                 await _unitOfWork.SaveChangeAsync();
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -118,6 +137,7 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var existingFavoriteDish = await _unitOfWork.Repository<FavoriteDish>().GetByIdAsync(favoriteDishId)
                     ?? throw new ErrorException(
                         StatusCodes.Status404NotFound, 
@@ -126,9 +146,14 @@ namespace Services
 
                 _mapper.Map(favoriteDishDTO, existingFavoriteDish);
                 existingFavoriteDish.LastUpdatedTime = DateTime.UtcNow;
+                existingFavoriteDish.LastUpdatedBy = userId;
 
                 await _unitOfWork.Repository<FavoriteDish>().UpdateAsync(existingFavoriteDish);
                 await _unitOfWork.SaveChangeAsync();
+            }
+            catch(ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -140,15 +165,21 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var favoriteDish = await _unitOfWork.Repository<FavoriteDish>().GetByIdAsync(favoriteDishId)
                     ?? throw new ErrorException(
                         StatusCodes.Status404NotFound, 
                         ErrorCode.NOT_FOUND, 
                         "Favorite Dish not found!");
 
-                //favoriteDish.DeletedTime = DateTime.UtcNow;
+                favoriteDish.DeletedTime = DateTime.UtcNow;
+                favoriteDish.LastUpdatedBy = userId;
                 _unitOfWork.Repository<FavoriteDish>().DeleteAsync(favoriteDish);
                 await _unitOfWork.SaveChangeAsync();
+            }
+            catch(ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

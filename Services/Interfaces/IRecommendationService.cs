@@ -9,9 +9,9 @@ namespace Services.Interfaces
 {
     public interface IRecommendationService
     {
-        Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync(string userId);
-        Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync(string userId);
-        Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync(string userId);
-        Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync(string userId);
+        Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync();
+        Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync();
+        Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync();
+        Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync();
     }
 }

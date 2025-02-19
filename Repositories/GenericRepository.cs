@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Base;
 using DataAccessObjects;
+using MailKit.Search;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
 using Repositories.Interfaces;
@@ -265,6 +266,51 @@ namespace Repositories
             return new BasePaginatedList<T>(items, totalCount, pageIndex, pageSize);
         }
 
+        public async Task<BasePaginatedList<T>> FindWithPaginationAsync(
+    int pageIndex,
+    int pageSize,
+    Expression<Func<T, bool>> predicate, // Specific predicate for filtering
+    Expression<Func<T, bool>> searchTerm = null, // Optional search term for general filtering
+    Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, // Optional ordering
+    params Expression<Func<T, object>>[] includes) // Optional includes
+        {
+            IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
+
+            // Apply the predicate filter
+            query = query.Where(predicate);
+
+            // Apply the search term filter if provided
+            if (searchTerm != null)
+            {
+                query = query.Where(searchTerm);
+            }
+
+            // Add Includes
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            // Apply OrderBy if provided
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            // Get the total count of filtered items
+            int totalCount = await query.CountAsync();
+
+            // Apply pagination
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new BasePaginatedList<T>(items, totalCount, pageIndex, pageSize);
+        }
         public async Task<IEnumerable<T>> FindDeletedAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>()

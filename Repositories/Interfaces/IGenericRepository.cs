@@ -28,6 +28,13 @@ namespace Repositories.Interfaces
     Expression<Func<T, bool>> searchTerm = null,
     Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
     params Expression<Func<T, object>>[] includes);
+        Task<BasePaginatedList<T>> FindWithPaginationAsync(
+    int pageIndex,
+    int pageSize,
+    Expression<Func<T, bool>> predicate,
+    Expression<Func<T, bool>> searchTerm = null,
+    Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+    params Expression<Func<T, object>>[] includes);
         Task AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
         Task UpdateAsync(T entity);

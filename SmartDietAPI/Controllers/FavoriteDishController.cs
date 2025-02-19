@@ -15,6 +15,13 @@ namespace SmartDietAPI.Controllers
             _favoriteDishService = favoriteDishService;
         }
 
+        [HttpGet()]
+        public async Task<IActionResult> All()
+        {
+            var result = await _favoriteDishService.GetAllFavoriteDishesAsync();
+            return Ok(result);
+        }
+
         [HttpGet("all")]
         public async Task<IActionResult> GetFavoriteDishes(
             [FromQuery] int pageIndex = 1, 

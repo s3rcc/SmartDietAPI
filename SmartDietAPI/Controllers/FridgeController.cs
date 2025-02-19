@@ -1,0 +1,68 @@
+﻿using BusinessObjects.Base;
+using DTOs.FridgeDTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Services.Interfaces;
+
+namespace SmartDietAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class FridgeController : ControllerBase
+    {
+        private readonly IFridgeService _fridgeService;
+        public FridgeController(IFridgeService fridgeService)
+        {
+            _fridgeService = fridgeService;
+        }
+        [HttpGet("all")]
+        public async Task<IActionResult> Fridge()
+        {
+            var result = await _fridgeService.GetAllUserFrige();
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Fridge(string id)
+        {
+            var result = await _fridgeService.GetFridgeByIdAsync(id);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddFridge(FridgeDTO fridgeDTO)
+        {
+            await _fridgeService.CreateFridgeAsync(fridgeDTO);
+            return Ok(ApiResponse<object>.Success(null, "Fridge created successfully", 201));
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFridge(string id, FridgeDTO fridgeDTO)
+        {
+            await _fridgeService.UpdateFridgeAsync(id, fridgeDTO);
+            return Ok(ApiResponse<object>.Success(null, "Fridge updated successfully"));
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFridge(string id)
+        {
+            await _fridgeService.DeleteFridgeAsync(id);
+            return Ok(ApiResponse<object>.Success(null, "Fridge deleted successfully"));
+        }
+        [HttpGet]
+        public async Task<IActionResult> AllFrideItem(string id)
+        {
+            var result = await _fridgeService.GetAllItemsInFridge(id);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpGet("id")]
+        public async Task<IActionResult> FrideItem(string id)
+        {
+            var result = await _fridgeService.GetItemById(id);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpPost("fridgeId")]
+        public async Task<IActionResult> AddItemFridge(string fridgeId, List<FridgeItemDTO> fridgeItemDTOs)
+        {
+            await _fridgeService.AddItemsToFridge(fridgeId, fridgeItemDTOs);
+            return Ok(ApiResponse<object>.Success(null, "Fridge created successfully", 201));
+        }
+    }
+}

@@ -12,7 +12,6 @@ namespace DTOs.FridgeDTOs
 {
     public class FridgeItemDTO
     {
-        public string FridgeId { get; set; }
         public string FoodId { get; set; }
         public decimal Quantity { get; set; }
         public DateTime? PurchaseDate { get; set; }

@@ -2,6 +2,7 @@
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Enum;
+using BusinessObjects.Exceptions;
 using DTOs.MealDTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,19 +21,22 @@ namespace Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly MealRecommendationSettings _settings;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public RecommendationService(IUnitOfWork unitOfWork, IOptions<MealRecommendationSettings> options, IMapper mapper)
+        public RecommendationService(IUnitOfWork unitOfWork, IOptions<MealRecommendationSettings> options, IMapper mapper, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _settings = options.Value;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         // Generate meal recommendations for a user
-        public async Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync()
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var userPreferences = await _unitOfWork.Repository<UserPreference>()
                     .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
                     ?? throw new Exception("User preferences not found");
@@ -89,6 +93,10 @@ namespace Services
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recommendedMeals);
             }
+            catch(ErrorException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 // Log the exception and rethrow or handle it as needed
@@ -97,10 +105,11 @@ namespace Services
         }
 
         // Regenerate recommendations for a user
-        public async Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync()
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 // Clear recent recommendations
                 var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId &&
@@ -110,7 +119,11 @@ namespace Services
                 await _unitOfWork.SaveChangeAsync();
 
                 // Generate new recommendations
-                return await GenerateRecommendationsAsync(userId);
+                return await GenerateRecommendationsAsync();
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -120,10 +133,11 @@ namespace Services
         }
 
         // Get current recommended meals for a user
-        public async Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync()
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId &&
                         r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
@@ -135,6 +149,10 @@ namespace Services
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));
             }
+            catch (ErrorException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 // Log the exception and rethrow or handle it as needed
@@ -143,10 +161,11 @@ namespace Services
         }
 
         // Get recommendation history for a user
-        public async Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync()
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
                 var recommendationHistory = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId,
                         includes: new Expression<Func<MealRecommendationHistory, object>>[]
@@ -156,6 +175,10 @@ namespace Services
                         });
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recommendationHistory.Select(r => r.Meal));
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

@@ -22,6 +22,9 @@ namespace BusinessObjects.FixedData
         MiddleEastern,
         Greek,
         Spanish,
-        Brazilian
+        Brazilian,
+        NViet,
+        TViet,
+        BViet
     }
 }
