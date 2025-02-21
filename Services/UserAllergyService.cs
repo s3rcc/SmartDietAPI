@@ -109,13 +109,19 @@ namespace Services
                 // Lấy userId từ token
                 var userId = _tokenService.GetUserIdFromToken();
 
+                // Kiểm tra đầu vào
+                if (foodIds == null || !foodIds.Any())
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Danh sách FoodId không được để trống");
+                }
+
                 // Lấy danh sách các dị ứng cần xóa
                 var allergiesToDelete = await _unitOfWork.Repository<UserAllergy>()
                     .FindAsync(x => x.SmartDietUserId == userId && foodIds.Contains(x.FoodId));
 
                 if (!allergiesToDelete.Any())
                 {
-                    throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "No allergies found to delete");
+                    throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Không tìm thấy dị ứng phù hợp để xóa");
                 }
 
                 // Xóa các dị ứng
@@ -128,7 +134,7 @@ namespace Services
             }
             catch (Exception ex)
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "Something went wrong");
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, "Xóa dị ứng thất bại");
             }
         }
         public async Task<IEnumerable<UserAllergyResponse>> GetUserAllergies()

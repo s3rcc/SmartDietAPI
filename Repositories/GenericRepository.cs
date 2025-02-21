@@ -94,12 +94,18 @@ namespace Repositories
 
         public async Task<IEnumerable<T>> GetAllAsync(
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
-            params Expression<Func<T, object>>[] includes)
+            Func<IQueryable<T>, IQueryable<T>> include = null,
+            params Expression<Func<T, object>>[] includes
+            )
         {
             IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
 
+            if (include != null)
+            {
+                query = include(query);
+            }
             // Add Includes
-            query = ApplyIncludes(query, includes);
+            //query = ApplyIncludesV2(query, includes);
 
             // Apply OrderBy
             if (orderBy != null)
@@ -366,6 +372,18 @@ namespace Repositories
                     }
                     return current.Include(include);
                 });
+            }
+            return query;
+        }
+
+        private IQueryable<T> ApplyIncludesV2(IQueryable<T> query, params Expression<Func<T, object>>[] includes)
+        {
+            foreach (var include in includes)
+            {
+                if (include.Body is MemberExpression || include.Body is UnaryExpression)
+                {
+                    query = query.Include(include);
+                }
             }
             return query;
         }

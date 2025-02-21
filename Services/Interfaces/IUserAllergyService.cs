@@ -13,5 +13,7 @@ namespace Services.Interfaces
         Task<IEnumerable<UserAllergyResponse>> GetUserAllergies();
 
         Task UpdateUserAllergies(List<string> foodIdsToAdd, List<string> foodIdsToRemove);
+        Task RemoveUserAllergies(List<string> foodIds);
+        Task AddUserAllergies(List<UserAllergyDTO> userAllergyDTOs);
     }
 }

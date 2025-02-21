@@ -18,6 +18,7 @@ namespace Repositories.Interfaces
             params Expression<Func<T, object>>[] includes);
         Task<IEnumerable<T>> GetAllAsync(
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes);
         Task<IEnumerable<T>> GetAllDeletedAsync(
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,

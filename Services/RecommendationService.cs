@@ -51,13 +51,20 @@ namespace Services
                 var recentMealIds = recentMeals.Select(r => r.MealId).ToHashSet();
 
                 var allMeals = await _unitOfWork.Repository<Meal>().GetAllAsync(
-                    includes: new Expression<Func<Meal, object>>[]
-                    {
-                        m => m.MealDishes,
-                        m => m.MealDishes.Select(md => md.Dish),
-                        m => m.MealDishes.Select(md => md.Dish.DishIngredients),
-                        m => m.MealDishes.Select(md => md.Dish.DishIngredients.Select(di => di.Food))
-                    });
+                    //includes:
+                    //[
+                    //    m => m.MealDishes,
+                    //    m => m.MealDishes.Select(md => md.Dish),
+                    //    m => m.MealDishes.Select(md => md.Dish.DishIngredients),
+                    //    m => m.MealDishes.Select(md => md.Dish.DishIngredients.Select(di => di.Food))
+                    //]
+                    include: query =>
+    query.Include(m => m.MealDishes)
+         .ThenInclude(md => md.Dish)
+         .ThenInclude(d => d.DishIngredients)
+         .ThenInclude(di => di.Food)
+
+                    );
 
                 var filteredMeals = allMeals.Where(m =>
                     !recentMealIds.Contains(m.Id) &&
