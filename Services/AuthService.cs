@@ -56,18 +56,18 @@ namespace Services
             _memoryCache = memoryCache;
             _emailService = emailService;
         }
-        private void SetTokenInsideCookie(string name, string value, DateTimeOffset time, HttpContext context)
-        {
-            context.Response.Cookies.Append(name, value,
-            new CookieOptions
-            {
-                Expires = time,
-                HttpOnly = true,
-                IsEssential = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-            });
-        }
+        //private void SetTokenInsideCookie(string name, string value, DateTimeOffset time, HttpContext context)
+        //{
+        //    context.Response.Cookies.Append(name, value,
+        //    new CookieOptions
+        //    {
+        //        Expires = time,
+        //        HttpOnly = true,
+        //        IsEssential = true,
+        //        Secure = true,
+        //        SameSite = SameSiteMode.None,
+        //    });
+        //}
         private async Task<SmartDietUser> CheckRefreshToken(string refreshToken)
         {
             List<SmartDietUser> users = await _userManager.Users.ToListAsync();
@@ -145,11 +145,10 @@ namespace Services
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
-
             return new AuthResponse
             {
                 AccessToken = token,
+                RefreshToken = refreshToken,
                 User = new UserInfo
                 {
                     Email = user.Email,
@@ -165,11 +164,10 @@ namespace Services
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("refreshToken", refreshToken, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
-
             return new AuthResponse
             {
                 AccessToken = token,
+                RefreshToken = refreshToken,
                 User = new UserInfo
                 {
                     Email = user.Email,
@@ -349,11 +347,11 @@ namespace Services
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
 
-            SetTokenInsideCookie("refreshToken", token, DateTimeOffset.UtcNow.AddDays(7), _contextAccessor.HttpContext);
 
             return new AuthResponse
             {
                 AccessToken = token,
+                RefreshToken = refreshToken,
                 User = new UserInfo
                 {
                     Email = user.Email,
