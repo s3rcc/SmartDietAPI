@@ -11,11 +11,11 @@ namespace Services.Interfaces
 
     public interface IUserPreferenceService
     {
-        Task<UserPreferenceResponse> GetUserPreferenceByIdAsync(string id);
+        Task<UserPreferenceResponse> GetUserPreferenceByIdAsync();
 
         Task CreateUserPreferenceAsync(UserPreferenceDTO userPreferenceDto);
 
-        Task UpdateUserPreferenceAsync(string userPreferenceId, UserPreferenceDTO userPreferenceDto);
+        Task UpdateUserPreferenceAsync(UserPreferenceDTO userPreferenceDto);
 
         #region Cumtumlum
         //Task<IEnumerable<UserPreferenceResponse>> GetAllUserPreferencesAsync();

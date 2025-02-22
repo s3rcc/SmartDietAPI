@@ -9,6 +9,7 @@ using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
 using DTOs.RoleDTOs;
+using DTOs.UserAllergyDTOs;
 using DTOs.UserFeedbackDTOs;
 using DTOs.UserPreferenceDTOs;
 using DTOs.UserProfileDTos;
@@ -85,6 +86,7 @@ namespace Services.Mappers
 
             #endregion meal
 
+            #region User
             // Auth
             CreateMap<SmartDietUser,RegisterRequest>().ReverseMap();
             // User
@@ -92,8 +94,12 @@ namespace Services.Mappers
             // UserProfle
             CreateMap<SmartDietUser, RegisterUserWithRoleRequest>().ReverseMap();
             CreateMap<UserProfile, UserProfileResponse>().ReverseMap();
+            CreateMap<UserProfileDTO, UserProfile>()
+                .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore()); ;
             // role
             CreateMap<IdentityRole, RoleResponse>().ReverseMap();
+            #endregion User
+
             #region Favorite Dish Mappings
             CreateMap<FavoriteDish, FavoriteDishResponse>()
                 .ForMember(dest => dest.DishId, opt => opt.MapFrom(src => src.DishId))
@@ -112,7 +118,6 @@ namespace Services.Mappers
 
             #region User Preference Mapping
             CreateMap<UserPreference, UserPreferenceResponse>()
-                .ForMember(x => x.SmartDietUserId, y => y.MapFrom(src => src.SmartDietUserId))
                 .ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => src.PrimaryDietType.ToString()))
                 .ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => src.PrimaryRegionType.ToString()))
                 .ForMember(x => x.DailyMealCount, y => y.MapFrom(src => src.DailyMealCount))
@@ -123,13 +128,12 @@ namespace Services.Mappers
                 .ForMember(x => x.LowInventoryThreshold, y => y.MapFrom(src => src.LowInventoryThreshold));
 
             CreateMap<UserPreferenceDTO, UserPreference>()
-                .ForMember(x => x.SmartDietUserId, y => y.MapFrom(src => src.SmartDietUserId))
-                .ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => Enum.Parse<DietType>(src.PrimaryDietType)))
-                .ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => Enum.Parse<RegionType>(src.PrimaryRegionType)))
+                //.ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => Enum.Parse<DietType>(src.PrimaryDietType)))
+                //.ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => Enum.Parse<RegionType>(src.PrimaryRegionType)))
                 .ForMember(x => x.DailyMealCount, y => y.MapFrom(src => src.DailyMealCount))
                 .ForMember(x => x.DishesPerMealCount, y => y.MapFrom(src => src.DishesPerMealCount))
                 .ForMember(x => x.MaxCookingTime, y => y.MapFrom(src => src.MaxCookingTime))
-                .ForMember(x => x.MaxRecipeDifficulty, y => y.MapFrom(src => Enum.Parse<DifficultyLevel>(src.MaxRecipeDifficulty)))
+                //.ForMember(x => x.MaxRecipeDifficulty, y => y.MapFrom(src => Enum.Parse<DifficultyLevel>(src.MaxRecipeDifficulty)))
                 .ForMember(x => x.NotifyLowInventory, y => y.MapFrom(src => src.NotifyLowInventory))
                 .ForMember(x => x.LowInventoryThreshold, y => y.MapFrom(src => src.LowInventoryThreshold));
             #endregion
@@ -152,6 +156,11 @@ namespace Services.Mappers
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Food.Name));
             #endregion fridge
 
+            #region UserAllergy
+            CreateMap<UserAllergy, UserAllergyResponse>()
+                .ForMember(dest => dest.FoodName, opt => opt.MapFrom(src => src.Food.Name));
+            CreateMap<UserAllergyDTO, UserAllergy>();
+            #endregion UserAllergy
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DTOs.UserProfileDTos;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,8 @@ namespace Services.Interfaces
 {
     public interface IUserProfileService
     {
-        Task CreateAsync();
+        Task CreateUserProfileAsync(UserProfileDTO userProfileDTO);
+        Task<UserProfileResponse> GetUserProfileAsync();
+        Task UpdateUserProfileAsync(UserProfileDTO userProfileDTO);
     }
 }
