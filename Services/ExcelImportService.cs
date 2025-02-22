@@ -54,20 +54,20 @@ namespace Services
                         // Check for duplicates within the file
                         if (cellAValue != null && seenNames.Contains(cellAValue))
                         {
-                            throw new ValidationException($"Duplicate name '{cellAValue}' found in file");
+                            throw new ValidationException($"<<< Duplicate name '{cellAValue}' found in file >>>");
                         }
                         seenNames.Add(cellAValue!);
 
                         // Check if column A (index 1) is empty
                         if (string.IsNullOrWhiteSpace(cellAValue))
                         {
-                            throw new ValidationException("Empty row - Column A is required");
+                            throw new ValidationException("<<< Empty row - Column A is required >>>");
                         }
 
                         var requiredValue = worksheet.Cells[row, RequiredColumnIndex].Value?.ToString();
                         if (string.IsNullOrWhiteSpace(requiredValue))
                         {
-                            throw new ValidationException($"Required column {RequiredColumnIndex} is empty");
+                            throw new ValidationException($"<<< Required column {RequiredColumnIndex} is empty >>>");
                         }
 
                         var dto = MapExcelRowToDto<TDto>(worksheet, row);
@@ -76,7 +76,7 @@ namespace Services
                         var entity = MapDtoToEntity(dto);
 
                         if (await IsDuplicate(entity))
-                            throw new ValidationException($"Duplicate name '{cellAValue}' exists in database");
+                            throw new ValidationException($"<<< Duplicate name '{cellAValue}' exists in database >>>");
 
                         validEntities.Add(entity);
                     }

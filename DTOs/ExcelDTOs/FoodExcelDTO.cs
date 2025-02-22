@@ -18,5 +18,10 @@ namespace DTOs.ExcelDTOs
 
         [Column(10)]  
         public string? Image { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+        public string StorageGuidelines { get; set; } = string.Empty;
+
+
     }
 }

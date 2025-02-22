@@ -52,6 +52,14 @@ namespace Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
+
+            // Add new file handling services
+            services.AddScoped<IFileHandlerService, FileHandlerService>();
+            services.AddScoped<IExcelImportService<Meal>, ExcelImportService<Meal>>();
+            services.AddScoped<IExcelImportService<Dish>, ExcelImportService<Dish>>();
+            services.AddScoped<IExcelImportService<Food>, ExcelImportService<Food>>();
+
+
             // jwt middleware
             services.AddSingleton<TokenValidationParameters>(provider =>
             {
@@ -76,9 +84,6 @@ namespace Services
                 cfg.AllowNullCollections = true;
             });
 
-            // Add new file handling services
-            services.AddScoped<IFileHandlerService, FileHandlerService>();
-            services.AddScoped<IExcelImportService<Meal>, ExcelImportService<Meal>>();
 
             return services;
         }
