@@ -11,7 +11,8 @@ using Services.Configs;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BusinessObjects.Base;
-//using Services.BackgroundServices;
+using BusinessObjects.Entity;
+
 
 namespace Services
 {
@@ -74,6 +75,10 @@ namespace Services
                 cfg.AllowNullDestinationValues = true;
                 cfg.AllowNullCollections = true;
             });
+
+            // Add new file handling services
+            services.AddScoped<IFileHandlerService, FileHandlerService>();
+            services.AddScoped<IExcelImportService<Meal>, ExcelImportService<Meal>>();
 
             return services;
         }

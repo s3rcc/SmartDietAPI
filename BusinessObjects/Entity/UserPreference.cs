@@ -32,7 +32,7 @@ namespace BusinessObjects.Entity
 
         public bool NotifyLowInventory { get; set; } = true;
 
-        [Column(TypeName = "decimal(5,2)")]
+        [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(5,2)")]
         public decimal LowInventoryThreshold { get; set; } = 20.0m; // Percentage
 
     }
