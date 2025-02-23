@@ -10,8 +10,10 @@ namespace DTOs.AuthDTOs
     public class ChangePasswordRequest
     {
         [Required(ErrorMessage = "Required old password")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Password must be 6 number.")] public string OldPassword { get; set; }
+		[RegularExpression(@"^(?=.*[a-z])(?=.*\d)[a-z\d]{8,16}$", ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự, 1 chữ thường, 1 số")]
+		public string OldPassword { get; set; }
         [Required(ErrorMessage = "Required new password")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Password must be 6 number.")] public string NewPassword { get; set; }
+		[RegularExpression(@"^(?=.*[a-z])(?=.*\d)[a-z\d]{8,16}$", ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự, 1 chữ thường, 1 số")]
+		public string NewPassword { get; set; }
     }
 }
