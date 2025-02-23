@@ -2,6 +2,7 @@
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Enum;
+using BusinessObjects.Exceptions;
 using DTOs.MealDTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -11,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Services
@@ -21,105 +21,177 @@ namespace Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly MealRecommendationSettings _settings;
         private readonly IMapper _mapper;
-        public RecommendationService(IUnitOfWork unitOfWork, IOptions<MealRecommendationSettings> options, IMapper mapper)
+        private readonly ITokenService _tokenService;
+
+        public RecommendationService(IUnitOfWork unitOfWork, IOptions<MealRecommendationSettings> options, IMapper mapper, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _settings = options.Value;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         // Generate meal recommendations for a user
-        public async Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GenerateRecommendationsAsync()
         {
-            var userPreferences = await _unitOfWork.Repository<UserPreference>()
-                .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
-                ?? throw new Exception("User preferences not found");
-
-            var recentMeals = await _unitOfWork.Repository<MealRecommendationHistory>()
-                .FindAsync(r => r.SmartDietUserId == userId &&
-                                r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended));
-
-            var recentMealIds = recentMeals.Select(r => r.MealId).ToHashSet();
-
-            var allMeals = await _unitOfWork.Repository<Meal>().GetAllAsync(
-                includes:
-                [
-                    x => x.MealDishes,
-                    m => m.MealDishes.Select(md => md.Dish)
-                ]);
-
-            var filteredMeals = allMeals.Where(m =>
-                !recentMealIds.Contains(m.Id) &&
-                m.MealDishes.Any(md =>
-                md.Dish.DietType == userPreferences.PrimaryDietType &&
-                md.Dish.RegionType == userPreferences.PrimaryRegionType &&
-                md.Dish.CookingTimeMinutes <= userPreferences.MaxCookingTime &&
-                md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty)).ToList();
-
-            var scoredMeals = filteredMeals.Select(m => new
+            try
             {
-                Meal = m,
-                Score = CalculateMealScore(m, userId)
-            }).OrderByDescending(m => m.Score).ToList();
+                var userId = _tokenService.GetUserIdFromToken();
+                var userPreferences = await _unitOfWork.Repository<UserPreference>()
+                    .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
+                    ?? throw new Exception("User preferences not found");
 
-            var recommendedMeals = scoredMeals.Take(userPreferences.DailyMealCount).Select(m => m.Meal).ToList();
+                var userAllergies = await _unitOfWork.Repository<UserAllergy>()
+                    .FindAsync(ua => ua.SmartDietUserId == userId);
 
-            // Save recommendations to history
-            foreach (var meal in recommendedMeals)
-            {
-                await _unitOfWork.Repository<MealRecommendationHistory>().AddAsync(new MealRecommendationHistory
+                var recentMeals = await _unitOfWork.Repository<MealRecommendationHistory>()
+                    .FindAsync(r => r.SmartDietUserId == userId &&
+                        r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended));
+
+                var recentMealIds = recentMeals.Select(r => r.MealId).ToHashSet();
+
+                var allMeals = await _unitOfWork.Repository<Meal>().GetAllAsync(
+                    //includes:
+                    //[
+                    //    m => m.MealDishes,
+                    //    m => m.MealDishes.Select(md => md.Dish),
+                    //    m => m.MealDishes.Select(md => md.Dish.DishIngredients),
+                    //    m => m.MealDishes.Select(md => md.Dish.DishIngredients.Select(di => di.Food))
+                    //]
+                    include: query =>
+    query.Include(m => m.MealDishes)
+         .ThenInclude(md => md.Dish)
+         .ThenInclude(d => d.DishIngredients)
+         .ThenInclude(di => di.Food)
+
+                    );
+
+                var filteredMeals = allMeals.Where(m =>
+                    !recentMealIds.Contains(m.Id) &&
+                    m.MealDishes.Any(md =>
+                        md.Dish.DietType == userPreferences.PrimaryDietType &&
+                        md.Dish.RegionType == userPreferences.PrimaryRegionType &&
+                        md.Dish.CookingTimeMinutes <= userPreferences.MaxCookingTime &&
+                        md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty &&
+                        !md.Dish.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
+                    )).ToList();
+
+                var scoredMeals = filteredMeals.Select(m => new
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    SmartDietUserId = userId,
-                    MealId = meal.Id,
-                    RecommendationDate = DateTime.UtcNow
-                });
-            }
-            await _unitOfWork.SaveChangeAsync();
+                    Meal = m,
+                    Score = CalculateMealScore(m, userId)
+                }).OrderByDescending(m => m.Score).ToList();
 
-            return _mapper.Map<IEnumerable<MealResponse>>(recommendedMeals);
+                var recommendedMeals = scoredMeals.Take(userPreferences.DailyMealCount).Select(m => m.Meal).ToList();
+
+                // Save recommendations to history
+                foreach (var meal in recommendedMeals)
+                {
+                    await _unitOfWork.Repository<MealRecommendationHistory>().AddAsync(new MealRecommendationHistory
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        SmartDietUserId = userId,
+                        MealId = meal.Id,
+                        RecommendationDate = DateTime.UtcNow
+                    });
+                }
+
+                await _unitOfWork.SaveChangeAsync();
+
+                return _mapper.Map<IEnumerable<MealResponse>>(recommendedMeals);
+            }
+            catch(ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception and rethrow or handle it as needed
+                throw new Exception("Failed to generate recommendations", ex);
+            }
         }
 
         // Regenerate recommendations for a user
-        public async Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> RegenerateRecommendationsAsync()
         {
-            // Clear recent recommendations
-            var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
-                .FindAsync(r => r.SmartDietUserId == userId &&
-                                r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended));
+            try
+            {
+                var userId = _tokenService.GetUserIdFromToken();
+                // Clear recent recommendations
+                var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
+                    .FindAsync(r => r.SmartDietUserId == userId &&
+                        r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended));
 
-            _unitOfWork.Repository<MealRecommendationHistory>().DeleteRangeAsync(recentRecommendations);
-            await _unitOfWork.SaveChangeAsync();
+                _unitOfWork.Repository<MealRecommendationHistory>().DeleteRangeAsync(recentRecommendations);
+                await _unitOfWork.SaveChangeAsync();
 
-            // Generate new recommendations
-            return await GenerateRecommendationsAsync(userId);
+                // Generate new recommendations
+                return await GenerateRecommendationsAsync();
+            }
+            catch (ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception and rethrow or handle it as needed
+                throw new Exception("Failed to regenerate recommendations", ex);
+            }
         }
 
         // Get current recommended meals for a user
-        public async Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GetRecommendedMealsAsync()
         {
-            var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
-                .FindAsync(r => r.SmartDietUserId == userId &&
-                                r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
-                                includes: [
-                                    r => r.Meal,
-                                    r => r.Meal.MealDishes,
-                                ]);
+            try
+            {
+                var userId = _tokenService.GetUserIdFromToken();
+                var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
+                    .FindAsync(r => r.SmartDietUserId == userId &&
+                        r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
+                        includes: new Expression<Func<MealRecommendationHistory, object>>[]
+                        {
+                            r => r.Meal,
+                            r => r.Meal.MealDishes,
+                        });
 
-            return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));
+                return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));
+            }
+            catch (ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception and rethrow or handle it as needed
+                throw new Exception("Failed to get recommended meals", ex);
+            }
         }
 
         // Get recommendation history for a user
-        public async Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync(string userId)
+        public async Task<IEnumerable<MealResponse>> GetRecommendationHistoryAsync()
         {
-            var recommendationHistory = await _unitOfWork.Repository<MealRecommendationHistory>()
-                .FindAsync(r => r.SmartDietUserId == userId,
-                            includes: [
-                                r => r.Meal,
-                                r => r.Meal.MealDishes,
-                            ]);
+            try
+            {
+                var userId = _tokenService.GetUserIdFromToken();
+                var recommendationHistory = await _unitOfWork.Repository<MealRecommendationHistory>()
+                    .FindAsync(r => r.SmartDietUserId == userId,
+                        includes: new Expression<Func<MealRecommendationHistory, object>>[]
+                        {
+                            r => r.Meal,
+                            r => r.Meal.MealDishes,
+                        });
 
-            return _mapper.Map<IEnumerable<MealResponse>>(recommendationHistory.Select(r => r.Meal));
+                return _mapper.Map<IEnumerable<MealResponse>>(recommendationHistory.Select(r => r.Meal));
+            }
+            catch (ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception and rethrow or handle it as needed
+                throw new Exception("Failed to get recommendation history", ex);
+            }
         }
 
         // Calculate the score for a meal

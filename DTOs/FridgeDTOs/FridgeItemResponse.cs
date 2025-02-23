@@ -12,13 +12,15 @@ namespace DTOs.FridgeDTOs
 {
     public class FridgeItemResponse
     {
+        public string Id { get; set; }
         public string FoodId { get; set; }
+        public string? Image {  get; set; }
         public string Name { get; set; }
         public decimal Quantity { get; set; }
         public string Unit { get; set; }
         public DateTime? PurchaseDate { get; set; }
         public DateTime? ExpirationDate { get; set; }
         public StorageLocation StorageLocation { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
     }
 }

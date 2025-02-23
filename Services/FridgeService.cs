@@ -19,78 +19,115 @@ namespace Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        public FridgeService(IUnitOfWork unitOfWork, IMapper mapper, IConfiguration configuration)
+        private readonly ITokenService _tokenService;
+        public FridgeService(IUnitOfWork unitOfWork, IMapper mapper, IConfiguration configuration, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _configuration = configuration;
+            _tokenService = tokenService;
         }
         public async Task AddItemsToFridge(string fridgeId, List<FridgeItemDTO> fridgeItemDTOs)
         {
-
-            // Check if fridge exists
-            var fridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(fridgeId)
-                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
-
-            // Map FridgeItemDTOs to FridgeItem entities
-            var fridgeItems = _mapper.Map<List<FridgeItem>>(fridgeItemDTOs);
-
-            foreach (var item in fridgeItems)
+            try
             {
-                // Validate item (e.g., expiration date cannot be earlier than purchase date)
-                if (item.ExpirationDate < item.PurchaseDate)
+                // Get user id from token
+                var userId = _tokenService.GetUserIdFromToken();
+                // Check if fridge exists
+                var fridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(fridgeId)
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
+
+                // Map FridgeItemDTOs to FridgeItem entities
+                var fridgeItems = _mapper.Map<List<FridgeItem>>(fridgeItemDTOs);
+
+                foreach (var item in fridgeItems)
                 {
-                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Invalid expiration date");
+                    // Validate item (e.g., expiration date cannot be earlier than purchase date)
+                    if (item.ExpirationDate < item.PurchaseDate)
+                    {
+                        throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Invalid expiration date");
+                    }
+                    item.FridgeId = fridgeId;
+                    // Set required properties
+                    item.CreatedTime = DateTime.UtcNow;
+                    item.CreatedBy = userId; // Replace with the actual user ID if applicable
                 }
 
-                // Set required properties
-                item.CreatedTime = DateTime.UtcNow;
-                item.CreatedBy = "System"; // Replace with the actual user ID if applicable
-                item.FridgeId = fridgeId;
+                // Add items to the database
+                await _unitOfWork.Repository<FridgeItem>().AddRangeAsync(fridgeItems);
+                await _unitOfWork.SaveChangeAsync();
             }
-
-            // Add items to the database
-            await _unitOfWork.Repository<FridgeItem>().AddRangeAsync(fridgeItems);
-            await _unitOfWork.SaveChangeAsync();
-
+            catch (ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task CreateFridgeAsync(FridgeDTO fridgeDTO)
         {
-            var fridgeLimit = int.Parse(_configuration["FridgeSettings:FridgeLimit"]);
-            // Check existing fridge
-            var existingFridge = await _unitOfWork.Repository<Fridge>().GetAllAsync();
-            // limit the number of fridge
-            if (existingFridge.Count() > fridgeLimit)
+            try
             {
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, $"Limit number of fridge {fridgeLimit}");
+                // Get user id from token
+                var userId = _tokenService.GetUserIdFromToken();
+                var fridgeLimit = int.Parse(_configuration["FridgeSettings:FridgeLimit"]);
+                // Check existing fridge
+                var existingFridge = await _unitOfWork.Repository<Fridge>().FindAsync(x => x.SmartDietUserId == userId);
+                // limit the number of fridge
+                if (existingFridge.Count() >= fridgeLimit)
+                {
+                    throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, $"Limit number of fridge {fridgeLimit}");
+                }
+                var fridge = _mapper.Map<Fridge>(fridgeDTO);
+                fridge.SmartDietUserId = userId;
+                // Set created time
+                fridge.CreatedTime = DateTime.UtcNow;
+                fridge.CreatedBy = userId;
+                // Set user Id for fridge
+                await _unitOfWork.Repository<Fridge>().AddAsync(fridge);
+                await _unitOfWork.SaveChangeAsync();
+
             }
-            var fridge = _mapper.Map<Fridge>(fridgeDTO);
-            // Set created time
-            fridge.CreatedTime = DateTime.UtcNow;
-            fridge.CreatedBy = "System";
-            // Set user Id for fridge
-            fridge.SmartDietUserId = "System";
-            await _unitOfWork.Repository<Fridge>().AddAsync(fridge);
-            await _unitOfWork.SaveChangeAsync();
+            catch(ErrorException)
+            {
+                throw;
+            }
         }
 
         public async Task DeleteFridgeAsync(string id)
         {
-            // Check existing fridge
-            var existingFridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(id)
-                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
-            // Check fridge user match
-            //existingFridge.CreatedBy = user;
-            existingFridge.DeletedTime = DateTime.UtcNow;
-            existingFridge.DeletedBy = "System";
-            await _unitOfWork.Repository<Fridge>().UpdateAsync(existingFridge);
-            await _unitOfWork.SaveChangeAsync();
+            try
+            { 
+                // Get user id from token
+                var userId = _tokenService.GetUserIdFromToken();
+
+                // Check existing fridge
+                var existingFridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(id)
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
+                // Check fridge user match
+                //existingFridge.CreatedBy = user;
+                existingFridge.DeletedTime = DateTime.UtcNow;
+                existingFridge.DeletedBy = userId;
+                if(userId != existingFridge.SmartDietUserId)
+                {
+                    throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UNAUTHORIZED, "You do not have permission to delete the fridge");
+                }
+                await _unitOfWork.Repository<Fridge>().UpdateAsync(existingFridge);
+                await _unitOfWork.SaveChangeAsync();
+            }
+            catch(ErrorException)
+            {
+                throw;
+            }
 
         }
 
         public async Task<IEnumerable<FridgeItemResponse>> GetAllItemsInFridge(string id)
         {
+
             // Check if fridge exists
             var fridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(id)
                 ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
@@ -104,11 +141,18 @@ namespace Services
 
         public async Task<IEnumerable<FridgeRespose>> GetAllUserFrige()
         {
-            // Get user id
-            var userId = "abc";
-            // Get all fridge of the user
-            var fridges = await _unitOfWork.Repository<Fridge>().FindAsync(x => x.SmartDietUserId == userId);
-            return _mapper.Map<IEnumerable<FridgeRespose>>(fridges);
+            try
+            {
+                // Get user id
+                var userId = _tokenService.GetUserIdFromToken();
+                // Get all fridge of the user
+                var fridges = await _unitOfWork.Repository<Fridge>().FindAsync(x => x.SmartDietUserId == userId);
+                return _mapper.Map<IEnumerable<FridgeRespose>>(fridges);
+            }
+            catch (ErrorException)
+            {
+                throw;
+            }
         }
 
         public async Task<FridgeRespose> GetFridgeByIdAsync(string id)
@@ -147,45 +191,65 @@ namespace Services
 
         public async Task UpdateFridgeAsync(string id, FridgeDTO fridgeDTO)
         {
-            // Check if fridge exists
-            var existingFridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(id)
-                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
+            try
+            {
+                // Get user id from token
+                var userId = _tokenService.GetUserIdFromToken();
+                // Check if fridge exists
+                var existingFridge = await _unitOfWork.Repository<Fridge>().GetByIdAsync(id)
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Fridge does not exist");
 
-            // Update fridge properties
-            existingFridge.FridgeModel = fridgeDTO.FridgeModel;
-            existingFridge.FridgeLocation = fridgeDTO.FridgeLocation;
-            existingFridge.LastUpdatedTime = DateTime.UtcNow;
-            existingFridge.LastUpdatedBy = "System"; // Replace with the actual user if available
+                // Update fridge properties
+                existingFridge.FridgeModel = fridgeDTO.FridgeModel;
+                existingFridge.FridgeLocation = fridgeDTO.FridgeLocation;
+                existingFridge.LastUpdatedTime = DateTime.UtcNow;
+                existingFridge.LastUpdatedBy = userId;
 
-            // Save changes
-            await _unitOfWork.Repository<Fridge>().UpdateAsync(existingFridge);
-            await _unitOfWork.SaveChangeAsync();
+                // Save changes
+                await _unitOfWork.Repository<Fridge>().UpdateAsync(existingFridge);
+                await _unitOfWork.SaveChangeAsync();
+
+            }
+            catch(ErrorException)
+            {
+                throw;
+            }
         }
 
         public async Task UpdateItemInFridge(string itemId, FridgeItemDTO fridgeItemDTO)
         {
-            // Find the item by ID
-            var existingItem = await _unitOfWork.Repository<FridgeItem>().GetByIdAsync(itemId)
-                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Item does not exist");
-
-            // Validate expiration date
-            if (fridgeItemDTO.ExpirationDate < fridgeItemDTO.PurchaseDate)
+            try
             {
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Invalid expiration date");
+                // Get user id from token
+                var userId = _tokenService.GetUserIdFromToken();
+                // Find the item by ID
+                var existingItem = await _unitOfWork.Repository<FridgeItem>().GetByIdAsync(itemId)
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Item does not exist");
+
+                // Validate expiration date
+                if (fridgeItemDTO.ExpirationDate < fridgeItemDTO.PurchaseDate)
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Invalid expiration date");
+                }
+
+                // Update fields
+                existingItem.Quantity = fridgeItemDTO.Quantity;
+                existingItem.PurchaseDate = fridgeItemDTO.PurchaseDate;
+                existingItem.ExpirationDate = fridgeItemDTO.ExpirationDate;
+                existingItem.StorageLocation = fridgeItemDTO.StorageLocation;
+                existingItem.Notes = fridgeItemDTO.Notes;
+                existingItem.LastUpdatedTime = DateTime.UtcNow;
+                existingItem.LastUpdatedBy = userId; // Replace with the actual user if available
+
+                // Save changes
+                await _unitOfWork.Repository<FridgeItem>().UpdateAsync(existingItem);
+                await _unitOfWork.SaveChangeAsync();
+
             }
-
-            // Update fields
-            existingItem.Quantity = fridgeItemDTO.Quantity;
-            existingItem.PurchaseDate = fridgeItemDTO.PurchaseDate;
-            existingItem.ExpirationDate = fridgeItemDTO.ExpirationDate;
-            existingItem.StorageLocation = fridgeItemDTO.StorageLocation;
-            existingItem.Notes = fridgeItemDTO.Notes;
-            existingItem.LastUpdatedTime = DateTime.UtcNow;
-            existingItem.LastUpdatedBy = "System"; // Replace with the actual user if available
-
-            // Save changes
-            await _unitOfWork.Repository<FridgeItem>().UpdateAsync(existingItem);
-            await _unitOfWork.SaveChangeAsync();
+            catch(ErrorException)
+            {
+                throw;
+            }
         }
     }
 }

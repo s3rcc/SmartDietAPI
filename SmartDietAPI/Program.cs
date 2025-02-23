@@ -25,6 +25,8 @@ namespace SmartDietAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            //builder.WebHost.UseUrls("https://0.0.0.0:7095");
+
             var configuration  = builder.Configuration;
             // Add services to the container.
             builder.Services.AddControllers()
@@ -37,12 +39,12 @@ namespace SmartDietAPI
             builder.Services.AddIdentity<SmartDietUser, IdentityRole>(options =>
             {
                 // Configure identity options here if needed
-                options.SignIn.RequireConfirmedAccount = false;
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
+                //options.SignIn.RequireConfirmedAccount = false;
+                //options.Password.RequireDigit = false;
+                //options.Password.RequireLowercase = false;
+                //options.Password.RequireNonAlphanumeric = false;
+                //options.Password.RequireUppercase = false;
+                //options.Password.RequiredLength = 6;
             })
             .AddEntityFrameworkStores<SmartDietDbContext>()
             .AddDefaultTokenProviders();
@@ -132,6 +134,23 @@ namespace SmartDietAPI
                 options.Cookie.HttpOnly = true; // Cookie chỉ có thể truy cập từ server
                 options.Cookie.IsEssential = true; // Cookie cần thiết cho ứng dụng
             });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins", builder =>
+                {
+                    builder
+                        //.WithOrigins("exp://192.168.2.8:8082",
+                        //"http://localhost:19006",
+                        //"http://172.168.3.160:19006",
+                        //"http://localhost:8082")
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                        //.AllowCredentials();
+                });
+            });
+
             //---------------------------------------------------------------
             var app = builder.Build();
             //seed
@@ -156,13 +175,10 @@ namespace SmartDietAPI
                 }
             }
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
                 app.UseSwagger();
-                app.UseSwaggerUI();
-            }
 
-            // Apply CORS in the middleware pipeline
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SearchApi v1"));
+
             app.UseCors("AllowAllOrigins");
 
 

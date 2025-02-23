@@ -46,9 +46,12 @@ namespace Services
             services.AddScoped<IFridgeService, FridgeService>();
 
             services.AddScoped<IUserPreferenceService, UserPreferenceService>();
+            services.AddScoped<IUserAllergyService, UserAllergyService>();
             services.AddScoped<IUserFeedbackService, UserFeedbackService>();
+            services.AddScoped<IUserProfileService, UserProfileService>();
 
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
@@ -84,6 +87,7 @@ namespace Services
                 cfg.AllowNullCollections = true;
             });
 
+            services.AddHttpContextAccessor();
 
             return services;
         }

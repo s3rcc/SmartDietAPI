@@ -10,6 +10,7 @@ namespace DTOs.UserProfileDTos
 {
     public class UserProfileResponse
     {
+        public string Id { get; set; }
         public string SmartDietUserId { get; set; }
 
         public string FullName { get; set; }
@@ -24,6 +25,8 @@ namespace DTOs.UserProfileDTos
 
         public bool EnableEmailNotifications { get; set; } 
 
-        public bool EnablePushNotifications { get; set; } 
+        public bool EnablePushNotifications { get; set; }
+        public DateTime CreatedTime { get; set; }
+        public DateTime? LastUpdatedTime { get; set; }
     }
 }

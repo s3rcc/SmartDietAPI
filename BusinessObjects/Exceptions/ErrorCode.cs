@@ -18,5 +18,6 @@ namespace BusinessObjects.Exceptions
         public const string UNAUTHORIZED = "Unauthorized!";
         public const string BADREQUEST = "Bad request!";
         public const string CONFLICT = "Conflict";
+        public const string FORBIDDEN = "Forbiden";
     }
 }

@@ -14,31 +14,31 @@ namespace SmartDietAPI.Controllers
             _recommendationService = recommendationService;
         }
 
-        [HttpGet("recommendations/{userId}")]
-        public async Task<IActionResult> GetRecommendations(string userId)
+        [HttpGet("recommendations")]
+        public async Task<IActionResult> GetRecommendations()
         {
-            var recommendations = await _recommendationService.GetRecommendedMealsAsync(userId);
+            var recommendations = await _recommendationService.GetRecommendedMealsAsync();
             return Ok(recommendations);
         }
 
-        [HttpPost("generate/{userId}")]
-        public async Task<IActionResult> GenerateRecommendations(string userId)
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateRecommendations()
         {
-            var recommendations = await _recommendationService.GenerateRecommendationsAsync(userId);
+            var recommendations = await _recommendationService.GenerateRecommendationsAsync();
             return Ok(recommendations);
         }
 
-        [HttpPost("regenerate/{userId}")]
-        public async Task<IActionResult> RegenerateRecommendations(string userId)
+        [HttpPost("regenerate")]
+        public async Task<IActionResult> RegenerateRecommendations()
         {
-            var recommendations = await _recommendationService.RegenerateRecommendationsAsync(userId);
+            var recommendations = await _recommendationService.RegenerateRecommendationsAsync();
             return Ok(recommendations);
         }
 
-        [HttpGet("history/{userId}")]
-        public async Task<IActionResult> GetRecommendationHistory(string userId)
+        [HttpGet("history")]
+        public async Task<IActionResult> GetRecommendationHistory()
         {
-            var history = await _recommendationService.GetRecommendationHistoryAsync(userId);
+            var history = await _recommendationService.GetRecommendationHistoryAsync();
             return Ok(history);
         }
     }
