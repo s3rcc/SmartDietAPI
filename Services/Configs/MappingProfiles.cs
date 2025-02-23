@@ -153,7 +153,8 @@ namespace Services.Mappers
             CreateMap<FridgeItemDTO, FridgeItem>();
             CreateMap<Fridge, FridgeRespose>();
             CreateMap<FridgeItem, FridgeItemResponse>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Food.Name));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Food.Name))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Food.Image));
             #endregion fridge
 
             #region UserAllergy

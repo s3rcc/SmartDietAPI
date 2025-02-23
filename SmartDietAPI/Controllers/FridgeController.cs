@@ -16,7 +16,7 @@ namespace SmartDietAPI.Controllers
         {
             _fridgeService = fridgeService;
         }
-        [HttpGet("all")]
+        [HttpGet]
         public async Task<IActionResult> Fridge()
         {
             var result = await _fridgeService.GetAllUserFrige();
@@ -46,23 +46,35 @@ namespace SmartDietAPI.Controllers
             await _fridgeService.DeleteFridgeAsync(id);
             return Ok(ApiResponse<object>.Success(null, "Fridge deleted successfully"));
         }
-        [HttpGet]
+        [HttpGet("items")]
         public async Task<IActionResult> AllFrideItem(string id)
         {
             var result = await _fridgeService.GetAllItemsInFridge(id);
             return Ok(ApiResponse<object>.Success(result));
         }
-        [HttpGet("id")]
+        [HttpGet("items/{id}")]
         public async Task<IActionResult> FrideItem(string id)
         {
             var result = await _fridgeService.GetItemById(id);
             return Ok(ApiResponse<object>.Success(result));
         }
-        [HttpPost("fridgeId")]
+        [HttpPost("items")]
         public async Task<IActionResult> AddItemFridge(string fridgeId, List<FridgeItemDTO> fridgeItemDTOs)
         {
             await _fridgeService.AddItemsToFridge(fridgeId, fridgeItemDTOs);
-            return Ok(ApiResponse<object>.Success(null, "Fridge created successfully", 201));
+            return Ok(ApiResponse<object>.Success(null, "Item created successfully", 201));
+        }
+        [HttpPut("items/{id}")]
+        public async Task<IActionResult> UpdateItemFridge(string id, FridgeItemDTO fridgeItemDTO)
+        {
+            await _fridgeService.UpdateItemInFridge(id, fridgeItemDTO);
+            return Ok(ApiResponse<object>.Success(null, "Item updated successfully"));
+        }
+        [HttpDelete("{fridgeId}/item/{id}")]
+        public async Task<IActionResult> DeleteItemFridge(string fridgeId, string id)
+        {
+            await _fridgeService.RemoveItemsFromFridge(fridgeId,id);
+            return Ok(ApiResponse<object>.Success(null, "Item deleted successfully"));
         }
     }
 }
