@@ -10,10 +10,10 @@ namespace BusinessObjects.FixedData
     {
         // Weight
         Gram,
-        Kilogram,
-        Milligram,
-        Pound,
-        Ounce,
+        //Kilogram,
+        //Milligram,
+        //Pound,
+        //Ounce,
 
         // Volume
         Milliliter,
@@ -26,8 +26,8 @@ namespace BusinessObjects.FixedData
 
         // Count
         Piece,
-        Dozen,
-        Package,
-        Serving
+        //Dozen,
+        //Package,
+        //Serving
     }
 }

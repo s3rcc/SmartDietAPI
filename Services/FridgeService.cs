@@ -75,18 +75,18 @@ namespace Services
                 var userId = _tokenService.GetUserIdFromToken();
                 var fridgeLimit = int.Parse(_configuration["FridgeSettings:FridgeLimit"]);
                 // Check existing fridge
-                var existingFridge = await _unitOfWork.Repository<Fridge>().GetAllAsync();
+                var existingFridge = await _unitOfWork.Repository<Fridge>().FindAsync(x => x.SmartDietUserId == userId);
                 // limit the number of fridge
                 if (existingFridge.Count() >= fridgeLimit)
                 {
-                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, $"Limit number of fridge {fridgeLimit}");
+                    throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT, $"Limit number of fridge {fridgeLimit}");
                 }
                 var fridge = _mapper.Map<Fridge>(fridgeDTO);
+                fridge.SmartDietUserId = userId;
                 // Set created time
                 fridge.CreatedTime = DateTime.UtcNow;
                 fridge.CreatedBy = userId;
                 // Set user Id for fridge
-                fridge.SmartDietUserId = userId;
                 await _unitOfWork.Repository<Fridge>().AddAsync(fridge);
                 await _unitOfWork.SaveChangeAsync();
 
