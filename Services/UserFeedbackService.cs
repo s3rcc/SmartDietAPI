@@ -28,9 +28,12 @@ namespace Services
 
         public async Task CreateUserFeedbackAsync(UserFeedbackDTO userFeedbackDTO)
         {
+
             try
             {
                 var userFeedback = _mapper.Map<UserFeedback>(userFeedbackDTO);
+
+                userFeedback.CreatedBy = userFeedbackDTO.SmartDietUserId;
 
                 await _unitOfWork.Repository<UserFeedback>().AddAsync(userFeedback);
                 await _unitOfWork.SaveChangeAsync();

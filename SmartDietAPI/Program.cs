@@ -75,7 +75,16 @@ namespace SmartDietAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-
+            //------------------CORS---------
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins", policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
             //------------------Swagger---------
             builder.Services.AddSwaggerGen(c =>
             {
@@ -153,6 +162,11 @@ namespace SmartDietAPI
                     var initialiser = scope.ServiceProvider.GetRequiredService<SeedAccount>();
                     initialiser.InitialiseAsync().Wait();
                     initialiser.SeedAsync().Wait();
+
+/*                    var dataSeeder = services.GetRequiredService<SeedData>();
+                    dataSeeder.InitialiseAsync().Wait();  // Ensure required dependencies are in place
+                    dataSeeder.SeedAsync().Wait();*/
+
                 }
                 catch (Exception ex)
                 {
@@ -162,11 +176,13 @@ namespace SmartDietAPI
             }
             // Configure the HTTP request pipeline.
                 app.UseSwagger();
+
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SearchApi v1"));
 
-            
-
             app.UseCors("AllowAllOrigins");
+
+
+
             app.UseMiddleware<ValidationMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseRouting();

@@ -3,7 +3,6 @@ using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.FavoriteDishDTOs;
-using DTOs.FavoriteMealDTOs;
 using Microsoft.AspNetCore.Http;
 using Repositories.Interfaces;
 using Services.Interfaces;
@@ -110,11 +109,11 @@ namespace Services
                 var existingFavoriteDish = await _unitOfWork.Repository<FavoriteDish>().FindAsync(
                 x => x.SmartDietUserId == favoriteDishDTO.SmartDietUserId && x.DishId == favoriteDishDTO.DishId);
 
-                if (existingFavoriteDish != null)
-                    throw new ErrorException(
-                        StatusCodes.Status400BadRequest,
-                        ErrorCode.BADREQUEST,
-                        "Favorite dish already exists!");
+                //if (existingFavoriteDish != null)
+                //    throw new ErrorException(
+                //        StatusCodes.Status400BadRequest,
+                //        ErrorCode.BADREQUEST,
+                //        "Favorite dish already exists!");
 
                 var favoriteDish = _mapper.Map<FavoriteDish>(favoriteDishDTO);
                 favoriteDish.CreatedTime = DateTime.UtcNow;

@@ -24,7 +24,7 @@ namespace BusinessObjects.Entity
         public Food Food { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(10,2)")]
+        [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(10,2)")]
         public decimal Quantity { get; set; }
 
         public MeasurementUnit Unit { get; set; }  // e.g., grams, pieces, packages

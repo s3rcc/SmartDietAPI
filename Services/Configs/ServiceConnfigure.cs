@@ -11,7 +11,8 @@ using Services.Configs;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BusinessObjects.Base;
-//using Services.BackgroundServices;
+using BusinessObjects.Entity;
+
 
 namespace Services
 {
@@ -20,11 +21,14 @@ namespace Services
         public static IServiceCollection ConfigureService(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<SmartDietDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"), 
+                    b => b.MigrationsAssembly("SmartDietAPI")));
             // Email
             services.AddTransient<IEmailService, EmailSevice>();
             //seed
             services.AddScoped<SeedAccount>();
+                //services.AddScoped<SeedData>();
             //
             services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendationSettings"));
 
@@ -51,6 +55,14 @@ namespace Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
+
+            // Add new file handling services
+            services.AddScoped<IFileHandlerService, FileHandlerService>();
+            services.AddScoped<IExcelImportService<Meal>, ExcelImportService<Meal>>();
+            services.AddScoped<IExcelImportService<Dish>, ExcelImportService<Dish>>();
+            services.AddScoped<IExcelImportService<Food>, ExcelImportService<Food>>();
+
+
             // jwt middleware
             services.AddSingleton<TokenValidationParameters>(provider =>
             {
@@ -76,6 +88,7 @@ namespace Services
             });
 
             services.AddHttpContextAccessor();
+
             return services;
         }
     }

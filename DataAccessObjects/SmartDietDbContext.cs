@@ -21,6 +21,7 @@ namespace DataAccessObjects
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<UserPreference> UserPreferences { get; set; }
         public DbSet<UserAllergy> UserAllergies { get; set; }
+        public DbSet<UserFeedback> UserFeedbacks { get; set; }
         public DbSet<FavoriteDish> FavoriteDishes { get; set; }
         public DbSet<FavoriteMeal> FavoriteMeals { get; set; }
         public DbSet<Food> Foods { get; set; }

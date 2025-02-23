@@ -32,6 +32,7 @@ namespace Services
         {
             try
             {
+
                 var userId = _tokenService.GetUserIdFromToken();
 
                 // Check if dish name already exists
@@ -40,6 +41,7 @@ namespace Services
                 {
                     throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Dish name already exists");
                 }
+
 
                 // Create map
                 var dish = _mapper.Map<Dish>(dishDTO);
