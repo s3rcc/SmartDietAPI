@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 namespace DTOs.AuthDTOs
 {
     public class EmailRequest
-    {
-        [Required(ErrorMessage = "Required Email")]
-        [EmailAddress(ErrorMessage = "Email not valid")]
-        public string Email { get; set; }
+   {
+        public string? Email { get; set; }
     }
 }
