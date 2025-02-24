@@ -48,18 +48,23 @@ namespace Repositories
         public async Task<IEnumerable<T>> FindAsync(
             Expression<Func<T, bool>> predicate,
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>()
                 .Where(x => !x.DeletedTime.HasValue)
                 .Where(predicate);
 
+            if (include != null)
+            {
+                query = include(query);
+            }
             // Add Includes
             if (includes != null)
             {
-                foreach (var include in includes)
+                foreach (var includeItem in includes)
                 {
-                    query = query.Include(include);
+                    query = query.Include(includeItem);
                 }
             }
 
@@ -74,18 +79,23 @@ namespace Repositories
 
         public async Task<T> FirstOrDefaultAsync(
             Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>()
                 .Where(x => !x.DeletedTime.HasValue)
                 .Where(predicate);
 
+            if (include != null)
+            {
+                query = include(query);
+            }
             // Add Includes
             if (includes != null)
             {
-                foreach (var include in includes)
+                foreach (var includeItem in includes)
                 {
-                    query = query.Include(include);
+                    query = query.Include(includeItem);
                 }
             }
 
@@ -105,7 +115,7 @@ namespace Repositories
                 query = include(query);
             }
             // Add Includes
-            //query = ApplyIncludesV2(query, includes);
+            query = ApplyIncludesV2(query, includes);
 
             // Apply OrderBy
             if (orderBy != null)
@@ -121,6 +131,7 @@ namespace Repositories
             int pageSize,
     Expression<Func<T, bool>> searchTerm = null,
     Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+    Func<IQueryable<T>, IQueryable<T>> include = null,
     params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
@@ -130,12 +141,15 @@ namespace Repositories
             {
                 query = query.Where(searchTerm);
             }
-
+            if (include != null)
+            {
+                query = include(query);
+            }
             if (includes != null)
             {
-                foreach (var include in includes)
+                foreach (var includeItem in includes)
                 {
-                    query = query.Include(include);
+                    query = query.Include(includeItem);
                 }
             }
 
@@ -152,16 +166,20 @@ namespace Repositories
 
         public async Task<T> GetByIdAsync(
             string id,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
-
+            if (include != null)
+            {
+                query = include(query);
+            }
             // Add Includes
             if (includes != null)
             {
-                foreach (var include in includes)
+                foreach (var includeItem in includes)
                 {
-                    query = query.Include(include);
+                    query = query.Include(includeItem);
                 }
             }
 
@@ -278,6 +296,7 @@ namespace Repositories
     Expression<Func<T, bool>> predicate, // Specific predicate for filtering
     Expression<Func<T, bool>> searchTerm = null, // Optional search term for general filtering
     Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, // Optional ordering
+    Func<IQueryable<T>, IQueryable<T>> include = null,
     params Expression<Func<T, object>>[] includes) // Optional includes
         {
             IQueryable<T> query = _context.Set<T>().Where(x => !x.DeletedTime.HasValue);
@@ -290,13 +309,16 @@ namespace Repositories
             {
                 query = query.Where(searchTerm);
             }
-
+            if (include != null)
+            {
+                query = include(query);
+            }
             // Add Includes
             if (includes != null)
             {
-                foreach (var include in includes)
+                foreach (var includeItem in includes)
                 {
-                    query = query.Include(include);
+                    query = query.Include(includeItem);
                 }
             }
 

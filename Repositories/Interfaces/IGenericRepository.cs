@@ -12,6 +12,7 @@ namespace Repositories.Interfaces
     {
         Task<T> GetByIdAsync(
             string id,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes);
         Task<T> GetDeletedByIdAsync(
             string id,
@@ -28,6 +29,7 @@ namespace Repositories.Interfaces
             int pageSize,
     Expression<Func<T, bool>> searchTerm = null,
     Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+    Func<IQueryable<T>, IQueryable<T>> include = null,
     params Expression<Func<T, object>>[] includes);
         Task<BasePaginatedList<T>> FindWithPaginationAsync(
     int pageIndex,
@@ -35,6 +37,7 @@ namespace Repositories.Interfaces
     Expression<Func<T, bool>> predicate,
     Expression<Func<T, bool>> searchTerm = null,
     Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+    Func<IQueryable<T>, IQueryable<T>> include = null,
     params Expression<Func<T, object>>[] includes);
         Task AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
@@ -45,6 +48,7 @@ namespace Repositories.Interfaces
         Task<IEnumerable<T>> FindAsync(
            Expression<Func<T, bool>> predicate,
            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+           Func<IQueryable<T>, IQueryable<T>> include = null,
            params Expression<Func<T, object>>[] includes);
         Task<IEnumerable<T>> FindDeletedAsync(
            Expression<Func<T, bool>> predicate,
@@ -52,6 +56,7 @@ namespace Repositories.Interfaces
            params Expression<Func<T, object>>[] includes);
         Task<T> FirstOrDefaultAsync(
             Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IQueryable<T>> include = null,
             params Expression<Func<T, object>>[] includes);
         Task<T> FirstOrDefaultDeletedAsync(
             Expression<Func<T, bool>> predicate,

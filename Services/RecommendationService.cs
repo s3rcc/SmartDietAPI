@@ -148,11 +148,9 @@ namespace Services
                 var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId &&
                         r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
-                        includes: new Expression<Func<MealRecommendationHistory, object>>[]
-                        {
-                            r => r.Meal,
-                            r => r.Meal.MealDishes,
-                        });
+                        include: query => query.Include(x => x.Meal)
+                        .ThenInclude(x => x.MealDishes)
+                        );
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));
             }
@@ -175,11 +173,8 @@ namespace Services
                 var userId = _tokenService.GetUserIdFromToken();
                 var recommendationHistory = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId,
-                        includes: new Expression<Func<MealRecommendationHistory, object>>[]
-                        {
-                            r => r.Meal,
-                            r => r.Meal.MealDishes,
-                        });
+                        include: query => query.Include(x => x.Meal)
+                        .ThenInclude(x => x.MealDishes));
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recommendationHistory.Select(r => r.Meal));
             }

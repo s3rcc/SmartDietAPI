@@ -2,6 +2,7 @@
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
+using DTOs.DishDTOs;
 using DTOs.FoodDTOs;
 using Microsoft.AspNetCore.Http;
 using Repositories.Interfaces;
@@ -274,13 +275,13 @@ namespace Services
                 // Retrieve old image
                 var oldImgUrl = existingFood.Image;
 
-                var food = _mapper.Map<Food>(foodDTO);
+                _mapper.Map(foodDTO, existingFood);
 
                 // Process image
                 if (foodDTO.Image != null)
                 {
                     // Upload new image
-                    food.Image = await _cloudinaryService.UploadImageAsync(foodDTO.Image);
+                    existingFood.Image = await _cloudinaryService.UploadImageAsync(foodDTO.Image);
 
                     // Delete old image if it exists
                     if (!string.IsNullOrEmpty(oldImgUrl))
@@ -292,7 +293,7 @@ namespace Services
                 else
                 {
                     // Keep old image
-                    food.Image = oldImgUrl;
+                    existingFood.Image = oldImgUrl;
                 }
 
                 // Handle Food Allergies
@@ -320,10 +321,10 @@ namespace Services
                 }
 
                 // Set last updated time and user
-                food.LastUpdatedTime = DateTime.UtcNow;
-                food.LastUpdatedBy = userId;
+                existingFood.LastUpdatedTime = DateTime.UtcNow;
+                existingFood.LastUpdatedBy = userId;
 
-                await _unitOfWork.Repository<Food>().UpdateAsync(food);
+                await _unitOfWork.Repository<Food>().UpdateAsync(existingFood);
                 await _unitOfWork.SaveChangeAsync();
             }
             catch (ErrorException)
