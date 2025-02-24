@@ -245,12 +245,12 @@ namespace Services
                 var oldImgUrl = existingDish.Image;
 
                 // Map dish
-                var dish = _mapper.Map<Dish>(dishDTO);
+                _mapper.Map(dishDTO, existingDish);
 
                 // Process image
                 if (dishDTO.Image != null)
                 {
-                    dish.Image = await _cloudinaryService.UploadImageAsync(dishDTO.Image);
+                    existingDish.Image = await _cloudinaryService.UploadImageAsync(dishDTO.Image);
 
                     // Delete old image if it exists
                     if (!string.IsNullOrEmpty(oldImgUrl))
@@ -262,7 +262,7 @@ namespace Services
                 else
                 {
                     // Keep old image
-                    dish.Image = oldImgUrl;
+                    existingDish.Image = oldImgUrl;
                 }
 
                 // Handle dish ingredients
@@ -292,11 +292,11 @@ namespace Services
                 }
 
                 // Set last updated time and user
-                dish.LastUpdatedTime = DateTime.UtcNow;
-                dish.LastUpdatedBy = userId;
+                existingDish.LastUpdatedTime = DateTime.UtcNow;
+                existingDish.LastUpdatedBy = userId;
 
                 // Save changes to the database
-                await _unitOfWork.Repository<Dish>().UpdateAsync(dish);
+                await _unitOfWork.Repository<Dish>().UpdateAsync(existingDish);
                 await _unitOfWork.SaveChangeAsync();
             }
             catch (ErrorException)

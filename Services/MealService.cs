@@ -4,6 +4,7 @@ using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.MealDTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Interfaces;
 using Services.Interfaces;
 using System;
@@ -118,10 +119,10 @@ namespace Services
             try
             {
                 var meals = await _unitOfWork.Repository<Meal>().GetAllAsync(
-                    includes: [
-                        x => x.MealDishes,
-                        x => x.MealDishes.Select(md => md.Dish)
-                    ]);
+                    include:
+                        x => x.Include(m => m.MealDishes)
+                        .ThenInclude(d => d.Dish)
+                    );
 
                 return _mapper.Map<IEnumerable<MealResponse>>(meals);
             }
@@ -142,7 +143,8 @@ namespace Services
                 BasePaginatedList<Meal> meals = await _unitOfWork.Repository<Meal>().GetAllWithPaginationAsync(
                     pageIndex,
                     pageSize,
-                    includes: x => x.MealDishes,
+                    include: query => query.Include(m => m.MealDishes)
+                    .ThenInclude(d => d.Dish),
                     searchTerm: x => string.IsNullOrEmpty(searchTerm) || x.Name.Contains(searchTerm),
                     orderBy: x => x.OrderBy(f => f.Name)
                 );
@@ -179,7 +181,8 @@ namespace Services
             {
                 var meal = await _unitOfWork.Repository<Meal>().GetByIdAsync(
                     id,
-                    includes: x => x.MealDishes)
+                    include: query => query.Include(m => m.MealDishes)
+                    .ThenInclude(d => d.Dish))
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Meal does not exist!");
 
                 return _mapper.Map<MealResponse>(meal);
@@ -214,13 +217,13 @@ namespace Services
                 // Retrieve old image
                 var oldImgUrl = existingMeal.Image;
 
-                var meal = _mapper.Map<Meal>(mealDTO);
+                _mapper.Map(mealDTO, existingMeal);
 
                 // Process image
                 if (mealDTO.Image != null)
                 {
                     // Upload new image
-                    meal.Image = await _cloudinaryService.UploadImageAsync(mealDTO.Image);
+                    existingMeal.Image = await _cloudinaryService.UploadImageAsync(mealDTO.Image);
 
                     // Delete old image if it exists
                     if (!string.IsNullOrEmpty(oldImgUrl))
@@ -232,7 +235,7 @@ namespace Services
                 else
                 {
                     // Keep old image
-                    meal.Image = oldImgUrl;
+                    existingMeal.Image = oldImgUrl;
                 }
 
                 // Handle Meal Dishes
@@ -260,10 +263,10 @@ namespace Services
                 }
 
                 // Set last updated time and user
-                meal.LastUpdatedTime = DateTime.UtcNow;
-                meal.LastUpdatedBy = userId;
+                existingMeal.LastUpdatedTime = DateTime.UtcNow;
+                existingMeal.LastUpdatedBy = userId;
 
-                await _unitOfWork.Repository<Meal>().UpdateAsync(meal);
+                await _unitOfWork.Repository<Meal>().UpdateAsync(existingMeal);
                 await _unitOfWork.SaveChangeAsync();
             }
             catch (ErrorException)
