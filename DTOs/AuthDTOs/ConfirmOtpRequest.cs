@@ -9,10 +9,7 @@ namespace DTOs.AuthDTOs
 {
     public class ConfirmOtpRequest
     {
-        [Required(ErrorMessage = "Required email")]
-        [EmailAddress(ErrorMessage = "Email not valid")]
-        public string Email { get; set; }
-        [Required(ErrorMessage = "Required OTP")]
-        public string OTP { get; set; }
+        public  string? Email { get; set; }
+        public  string? OTP { get; set; }
     }
 }

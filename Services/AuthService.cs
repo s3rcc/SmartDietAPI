@@ -129,6 +129,12 @@ namespace Services
 
         public async Task<AuthResponse> Login(LoginRequest request)
         {
+            if(request.Email == null)    
+               throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
+            if (request.Password == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input password");
+
+
             var user = await _userManager.FindByEmailAsync(request.Email)
             ?? throw new ErrorException(404, ErrorCode.NOT_FOUND, "User not found");
             if (!await _userManager.IsEmailConfirmedAsync(user))
@@ -160,6 +166,8 @@ namespace Services
 
         public async Task<AuthResponse> RefreshToken(RefreshTokenRequest request)
         {
+            if (request.refreshToken == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input refreshToken");
             SmartDietUser user = await CheckRefreshToken(request.refreshToken);
             (string token, IEnumerable<string> roles) = GenerateJwtToken(user);
             string refreshToken = await GenerateRefreshToken(user);
@@ -178,6 +186,19 @@ namespace Services
 
         public async Task Register(RegisterRequest request)
         {
+            if (request.Email == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
+            if (request.Name == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input name");
+            if (request.Password == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input password");
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+            { 
+                if(request.PhoneNumber.Length != 10 || !request.PhoneNumber.All(char.IsDigit))
+                {
+                    throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input right number phone");
+                }
+            }
             SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email);
             if (user != null)
             {
@@ -219,6 +240,10 @@ namespace Services
         }
         public async Task VerifyOtp(ConfirmOtpRequest request, bool isResetPassword)
         {
+            if (request.Email == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
+            if (request.OTP == null || !request.OTP.All(char.IsDigit))
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input right OTP");
             string cacheKey = isResetPassword ? $"OTPResetPassword_{request.Email}" : $"OTP_{request.Email}";
             if (_memoryCache.TryGetValue(cacheKey, out string memory))
             {
@@ -246,6 +271,8 @@ namespace Services
         }
         public async Task ResendConfirmationEmail(EmailRequest request)
         {
+            if (request.Email == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
             var otp = GenerateOTP();
             var cacheKey = $"OTP_{request.Email}";
             if (_memoryCache.TryGetValue(cacheKey, out var memory))
@@ -257,6 +284,10 @@ namespace Services
         }
         public async Task ChangePassword(ChangePasswordRequest request)
         {
+            if (request.OldPassword == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input old password");
+            if (request.NewPassword == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input new password");
             string userId = _contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                 ?? throw new ErrorException(401, ErrorCode.UNAUTHORIZED, "Something not correct");
             SmartDietUser? user = await _userManager.FindByIdAsync(userId);
@@ -269,6 +300,10 @@ namespace Services
 
         public async Task ResetPassword(ResetPasswordRequest request)
         {
+            if (request.Email == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
+            if (request.Password == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input password");
             var cacheKey = $"ResetPassword_{request.Email}";
             if (_memoryCache.TryGetValue(cacheKey, out string memory))
             {
@@ -301,6 +336,8 @@ namespace Services
 
         public async Task ForgotPassword(EmailRequest request)
         {
+            if (request.Email == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input email");
             SmartDietUser? user = await _userManager.FindByEmailAsync(request.Email)
             ?? throw new ErrorException(400, ErrorCode.BADREQUEST, "User not found");
             if (!await _userManager.IsEmailConfirmedAsync(user))
@@ -315,6 +352,8 @@ namespace Services
         }
         public async Task<AuthResponse> LoginGoogle(TokenGoogleRequest request)
         {
+            if (request.token == null)
+                throw new ErrorException(404, ErrorCode.NOT_FOUND, "Please input token");
             GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(request.token);
             string email = payload.Email;
             string providerKey = payload.Subject;
