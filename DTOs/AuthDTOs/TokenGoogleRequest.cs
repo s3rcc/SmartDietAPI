@@ -9,7 +9,6 @@ namespace DTOs.AuthDTOs
 {
     public class TokenGoogleRequest
     {
-        [Required(ErrorMessage = "Required Token")]
-        public string token { get; set; }
+        public string? token { get; set; }
     }
 }

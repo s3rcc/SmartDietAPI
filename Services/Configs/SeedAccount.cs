@@ -144,7 +144,7 @@ namespace Services.Configs
             var existingUser = await _userManager.FindByEmailAsync(user.Email);
             if (existingUser is null)
             {
-                var result = await _userManager.CreateAsync(user, "123456");
+                var result = await _userManager.CreateAsync(user, "aaaaaaa0");
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, role);

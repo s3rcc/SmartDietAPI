@@ -9,7 +9,6 @@ namespace DTOs.AuthDTOs
 {
     public class RefreshTokenRequest
     {
-        [Required(ErrorMessage = "Required RefreshToken")]
-        public string refreshToken { get; set; }
+        public string? refreshToken { get; set; }
     }
 }
