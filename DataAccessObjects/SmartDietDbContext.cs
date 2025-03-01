@@ -36,6 +36,7 @@ namespace DataAccessObjects
         public DbSet<FridgeItem> FridgeItems { get; set; }
         public DbSet<MealRecommendationHistory> MealRecommendationHistories { get; set; }
         public DbSet<UserMealInteraction> UserMealInteractions { get; set; }
+        public DbSet<DishRecommendHistory> DishRecommendHistories { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FoodAllergy>()
