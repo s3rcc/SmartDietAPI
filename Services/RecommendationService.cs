@@ -69,11 +69,15 @@ namespace Services
                 var filteredMeals = allMeals.Where(m =>
                     !recentMealIds.Contains(m.Id) &&
                     m.MealDishes.Any(md =>
-                        md.Dish.DietType == userPreferences.PrimaryDietType &&
+                        md.Dish.DietType == userPreferences.PrimaryDietType
+                        &&
                         (userPreferences.PrimaryRegionType.HasFlag(md.Dish.RegionType) ||
-                         md.Dish.RegionType.HasFlag(userPreferences.PrimaryRegionType)) &&
-                        md.Dish.CookingTimeMinutes <= userPreferences.MaxCookingTime &&
-                        md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty &&
+                         md.Dish.RegionType.HasFlag(userPreferences.PrimaryRegionType))
+                         &&
+                        md.Dish.CookingTimeMinutes <= userPreferences.MaxCookingTime
+                        &&
+                        md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty
+                        &&
                         !md.Dish.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
                     )).ToList();
 
@@ -102,7 +106,7 @@ namespace Services
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recommendedMeals);
             }
-            catch(ErrorException)
+            catch (ErrorException)
             {
                 throw;
             }
