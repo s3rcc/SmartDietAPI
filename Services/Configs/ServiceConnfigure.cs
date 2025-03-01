@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
+using Net.payOS;
 
 
 namespace Services
@@ -31,9 +32,19 @@ namespace Services
                 //services.AddScoped<SeedData>();
             //
             services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendation"));
-
             // Unit of work DI
+            services.AddScoped<Net.payOS.PayOS>(provider =>
+            {
+                // Lấy các giá trị từ cấu hình (appsettings.json hoặc environment variables)
+                string clientId = configuration["PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID in configuration");
+                string apiKey = configuration["PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY in configuration");
+                string checksumKey = configuration["PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY in configuration");
+
+                // Trả về instance của PayOS
+                return new Net.payOS.PayOS(clientId, apiKey, checksumKey);
+            });
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IPaymentService, PaymentService>();
             // Other service DI
             services.AddScoped<IFoodService, FoodService>();
             services.AddScoped<IDishService, DishService>();
@@ -61,7 +72,6 @@ namespace Services
             services.AddScoped<IExcelImportService<Meal>, ExcelImportService<Meal>>();
             services.AddScoped<IExcelImportService<Dish>, ExcelImportService<Dish>>();
             services.AddScoped<IExcelImportService<Food>, ExcelImportService<Food>>();
-
 
             // jwt middleware
             services.AddSingleton<TokenValidationParameters>(provider =>
