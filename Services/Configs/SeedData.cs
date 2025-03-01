@@ -64,7 +64,7 @@ namespace Services.Configs
             _logger.LogInformation("Starting to seed food and dish data...");
 
             await SeedFoodsAsync();
-            await SeedDishesAsync();
+            //await SeedDishesAsync();
             await SeedMealsAsync();
             await SeedMealDishesAsync();
 
@@ -107,31 +107,31 @@ namespace Services.Configs
         }
         #endregion
 
-        #region Dishs
-        private async Task SeedDishesAsync()
-        {
-            if (!_context.Dishes.Any())
-            {
-                var dishes = new List<Dish>
-        {
-            new Dish { Name = "Spaghetti Carbonara", Description = "Italian pasta dish", PrepTimeMinutes = 10, CookingTimeMinutes = 20, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Italian },
-            new Dish { Name = "Grilled Chicken", Description = "Simple grilled chicken", PrepTimeMinutes = 15, CookingTimeMinutes = 30, Difficulty = DifficultyLevel.Easy, RegionType = RegionType.American },
-            new Dish { Name = "Beef Stroganoff", Description = "Russian beef dish", PrepTimeMinutes = 20, CookingTimeMinutes = 40, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Greek },
-            new Dish { Name = "Sushi", Description = "Japanese sushi rolls", PrepTimeMinutes = 30, CookingTimeMinutes = 0, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Japanese },
-            new Dish { Name = "Caesar Salad", Description = "Classic Caesar salad", PrepTimeMinutes = 10, CookingTimeMinutes = 0, Difficulty = DifficultyLevel.Easy, RegionType = RegionType.French },
-            new Dish { Name = "Chicken Curry", Description = "Spicy chicken curry", PrepTimeMinutes = 20, CookingTimeMinutes = 40, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Indian },
-            new Dish { Name = "Pad Thai", Description = "Thai stir-fried noodles", PrepTimeMinutes = 15, CookingTimeMinutes = 25, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Thai },
-            new Dish { Name = "Bibimbap", Description = "Korean mixed rice", PrepTimeMinutes = 20, CookingTimeMinutes = 30, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Korean },
-            new Dish { Name = "Pho", Description = "Vietnamese noodle soup", PrepTimeMinutes = 30, CookingTimeMinutes = 120, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Vietnamese },
-            new Dish { Name = "Peking Duck", Description = "Crispy Chinese roasted duck", PrepTimeMinutes = 60, CookingTimeMinutes = 120, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Chinese }
-        };
+        //#region Dishs
+        //private async Task SeedDishesAsync()
+        //{
+        //    if (!_context.Dishes.Any())
+        //    {
+        //        var dishes = new List<Dish>
+        //{
+        //    new Dish { Name = "Spaghetti Carbonara", Description = "Italian pasta dish", PrepTimeMinutes = 10, CookingTimeMinutes = 20, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Italian },
+        //    new Dish { Name = "Grilled Chicken", Description = "Simple grilled chicken", PrepTimeMinutes = 15, CookingTimeMinutes = 30, Difficulty = DifficultyLevel.Easy, RegionType = RegionType.American },
+        //    new Dish { Name = "Beef Stroganoff", Description = "Russian beef dish", PrepTimeMinutes = 20, CookingTimeMinutes = 40, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Greek },
+        //    new Dish { Name = "Sushi", Description = "Japanese sushi rolls", PrepTimeMinutes = 30, CookingTimeMinutes = 0, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Japanese },
+        //    new Dish { Name = "Caesar Salad", Description = "Classic Caesar salad", PrepTimeMinutes = 10, CookingTimeMinutes = 0, Difficulty = DifficultyLevel.Easy, RegionType = RegionType.French },
+        //    new Dish { Name = "Chicken Curry", Description = "Spicy chicken curry", PrepTimeMinutes = 20, CookingTimeMinutes = 40, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Indian },
+        //    new Dish { Name = "Pad Thai", Description = "Thai stir-fried noodles", PrepTimeMinutes = 15, CookingTimeMinutes = 25, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Thai },
+        //    new Dish { Name = "Bibimbap", Description = "Korean mixed rice", PrepTimeMinutes = 20, CookingTimeMinutes = 30, Difficulty = DifficultyLevel.Medium, RegionType = RegionType.Korean },
+        //    new Dish { Name = "Pho", Description = "Vietnamese noodle soup", PrepTimeMinutes = 30, CookingTimeMinutes = 120, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Vietnamese },
+        //    new Dish { Name = "Peking Duck", Description = "Crispy Chinese roasted duck", PrepTimeMinutes = 60, CookingTimeMinutes = 120, Difficulty = DifficultyLevel.Hard, RegionType = RegionType.Chinese }
+        //};
 
-                await _context.Dishes.AddRangeAsync(dishes);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Seeded Dishes successfully.");
-            }
-        }
-        #endregion
+        //        await _context.Dishes.AddRangeAsync(dishes);
+        //        await _context.SaveChangesAsync();
+        //        _logger.LogInformation("Seeded Dishes successfully.");
+        //    }
+        //}
+        //#endregion
 
         #region Meals
         private async Task SeedMealsAsync()
