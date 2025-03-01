@@ -45,6 +45,7 @@ namespace Services
                 }
 
                 var favoriteMeal = _mapper.Map<FavoriteMeal>(favoriteMealDTO);
+                favoriteMeal.SmartDietUserId = userId;
                 favoriteMeal.CreatedTime = DateTime.UtcNow;
                 favoriteMeal.CreatedBy = userId; // Set the user ID from the token
                 await _unitOfWork.Repository<FavoriteMeal>().AddAsync(favoriteMeal);

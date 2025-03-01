@@ -92,6 +92,7 @@ namespace Services
                         Id = Guid.NewGuid().ToString(),
                         SmartDietUserId = userId,
                         MealId = meal.Id,
+                        CreatedBy = userId,
                         RecommendationDate = DateTime.UtcNow
                     });
                 }

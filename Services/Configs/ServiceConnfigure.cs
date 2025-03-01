@@ -30,7 +30,7 @@ namespace Services
             services.AddScoped<SeedAccount>();
                 //services.AddScoped<SeedData>();
             //
-            services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendationSettings"));
+            services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendation"));
 
             // Unit of work DI
             services.AddScoped<IUnitOfWork, UnitOfWork>();

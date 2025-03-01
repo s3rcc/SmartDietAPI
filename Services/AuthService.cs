@@ -139,7 +139,7 @@ namespace Services
             ?? throw new ErrorException(404, ErrorCode.NOT_FOUND, "User not found");
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
-                throw new ErrorException(400, ErrorCode.BADREQUEST, "User not confirm");
+                throw new ErrorException(StatusCodes.Status406NotAcceptable, ErrorCode.BADREQUEST, "User not confirm");
             }
             SignInResult result = await _signInManager.PasswordSignInAsync(user, request.Password, false, false);
             if (!result.Succeeded)
@@ -314,7 +314,7 @@ namespace Services
 
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
-                    throw new ErrorException(400, ErrorCode.BADREQUEST, "User not confirm");
+                    throw new ErrorException(StatusCodes.Status406NotAcceptable, ErrorCode.BADREQUEST, "User not confirm");
                 }
 
                 IdentityResult result = await _userManager.ResetPasswordAsync(user, memory, request.Password);

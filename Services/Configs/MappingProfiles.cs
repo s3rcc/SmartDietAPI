@@ -102,16 +102,16 @@ namespace Services.Mappers
 
             #region Favorite Dish Mappings
             CreateMap<FavoriteDish, FavoriteDishResponse>()
-                .ForMember(dest => dest.DishId, opt => opt.MapFrom(src => src.DishId))
-                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Dish.Name))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Dish.Image));
 
             CreateMap<FavoriteDishDTO, FavoriteDish>();
             #endregion 
 
             #region Favorite Meal Mappings
             CreateMap<FavoriteMeal, FavoriteMealResponse>()
-                .ForMember(dest => dest.MealId, opt => opt.MapFrom(src => src.MealId))
-                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Meal.Name))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Meal.Image));
 
             CreateMap<FavoriteMealDTO, FavoriteMeal>();
             #endregion Favorite Meal Mappings

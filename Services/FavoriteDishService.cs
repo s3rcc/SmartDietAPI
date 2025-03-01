@@ -107,15 +107,16 @@ namespace Services
             {
                 var userId = _tokenService.GetUserIdFromToken();
                 var existingFavoriteDish = await _unitOfWork.Repository<FavoriteDish>().FindAsync(
-                x => x.SmartDietUserId == favoriteDishDTO.SmartDietUserId && x.DishId == favoriteDishDTO.DishId);
+                x => x.SmartDietUserId == userId && x.DishId == favoriteDishDTO.DishId) ;
 
-                //if (existingFavoriteDish != null)
-                //    throw new ErrorException(
-                //        StatusCodes.Status400BadRequest,
-                //        ErrorCode.BADREQUEST,
-                //        "Favorite dish already exists!");
+                if (existingFavoriteDish.Any())
+                    throw new ErrorException(
+                        StatusCodes.Status400BadRequest,
+                        ErrorCode.BADREQUEST,
+                        "Favorite dish already exists!");
 
                 var favoriteDish = _mapper.Map<FavoriteDish>(favoriteDishDTO);
+                favoriteDish.SmartDietUserId = userId;
                 favoriteDish.CreatedTime = DateTime.UtcNow;
                 favoriteDish.CreatedBy = userId;
 
