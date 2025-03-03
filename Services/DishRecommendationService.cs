@@ -13,6 +13,7 @@ using DTOs.DishDTOs;
 using Repositories.Interfaces;
 using BusinessObjects.Exceptions;
 using BusinessObjects.Enum;
+using BusinessObjects.FixedData;
 
 namespace SmartDietAPI.Services
 {
@@ -23,9 +24,9 @@ namespace SmartDietAPI.Services
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
 
-        public DishRecommendationService(IUnitOfWork unitOfWork, 
-            IOptions<DishRecommendationSettings> options, 
-            IMapper mapper, 
+        public DishRecommendationService(IUnitOfWork unitOfWork,
+            IOptions<DishRecommendationSettings> options,
+            IMapper mapper,
             ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
@@ -39,11 +40,13 @@ namespace SmartDietAPI.Services
             try
             {
                 var userId = _tokenService.GetUserIdFromToken();
-                
+
                 // Get user preferences
                 var userPreferences = await _unitOfWork.Repository<UserPreference>()
                     .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
-                    ?? throw new Exception("User preferences not found");
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, 
+                        ErrorCode.NOT_FOUND, 
+                        "User preferences not found");
 
                 // Get user allergies
                 var userAllergies = await _unitOfWork.Repository<UserAllergy>()
@@ -67,12 +70,21 @@ namespace SmartDietAPI.Services
                 var filteredDishes = allDishes.Where(d =>
                     !recentDishIds.Contains(d.Id) &&
                     d.DietType == userPreferences.PrimaryDietType &&
-                    (userPreferences.PrimaryRegionType.HasFlag(d.RegionType) ||
+                    (userPreferences.PrimaryRegionType == RegionType.None || 
+                     d.RegionType == RegionType.None ||
+                     userPreferences.PrimaryRegionType.HasFlag(d.RegionType) ||
                      d.RegionType.HasFlag(userPreferences.PrimaryRegionType)) &&
                     d.CookingTimeMinutes <= userPreferences.MaxCookingTime &&
                     d.Difficulty <= userPreferences.MaxRecipeDifficulty &&
                     !d.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
                 ).ToList();
+
+                if (!filteredDishes.Any())
+                {
+                    throw new ErrorException(StatusCodes.Status404NotFound,
+                        ErrorCode.NOT_FOUND,
+                        "No dishes match current preferences");
+                }
 
                 // Score and sort dishes
                 var scoredDishes = filteredDishes.Select(d => new
@@ -104,11 +116,19 @@ namespace SmartDietAPI.Services
 
                 return _mapper.Map<IEnumerable<DishResponse>>(recommendedDishes);
             }
+            catch (ErrorException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                throw new ErrorException(StatusCodes.Status500InternalServerError, 
-                    ErrorCode.INTERNAL_SERVER_ERROR, 
-                    "Failed to generate dish recommendations");
+                // Log full error details
+                Console.WriteLine($"ERROR in GenerateRecommendationsAsync: {ex}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                throw new ErrorException(StatusCodes.Status500InternalServerError,
+                    ErrorCode.INTERNAL_SERVER_ERROR,
+                    $"Recommendation failed: {ex.Message}");
             }
         }
 
@@ -116,16 +136,15 @@ namespace SmartDietAPI.Services
         {
             try
             {
-                Console.WriteLine("Bắt đầu GetRecommendedDishesAsync"); // Log 1
+                Console.WriteLine("1 GetRecommendedDishesAsync"); // Log 1
                 var userId = _tokenService.GetUserIdFromToken();
                 Console.WriteLine($"UserId: {userId}"); // Log 2
                 var recentRecommendations = await _unitOfWork.Repository<DishRecommendHistory>()
-                    .FindAsync(r => r.SmartDietUserId == userId &&
-                        r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
+                    .FindAsync(r => r.SmartDietUserId == userId,
                         include: query => query.Include(x => x.Dish)
                         .ThenInclude(x => x.DishIngredients)
                         );
-                Console.WriteLine($"Số lượng recentRecommendations: {recentRecommendations.Count()}"); // Log 3
+                Console.WriteLine($"Count recentRecommendations: {recentRecommendations.Count()}"); // Log 3
 
                 Console.WriteLine("Bắt đầu mapping DishResponse"); // Log 4
                 var dishResponses = _mapper.Map<IEnumerable<DishResponse>>(recentRecommendations.Select(r => r.Dish));
@@ -196,35 +215,45 @@ namespace SmartDietAPI.Services
             }
         }
 
-        private async Task<double>CalculateDishScore(Dish dish, string userId)
+        private async Task<double> CalculateDishScore(Dish dish, string userId)
         {
-            // Calculate average rating from DishRating table
-            var ratings = await _unitOfWork.Repository<DishRating>()
-                .GetAllAsync();
-            var averageRating = ratings.Where(dr => dr.DishId == dish.Id).Average(dr => dr.Rating);
-            
-            var dishRatingPoints = averageRating * _settings.Points.DishRatingPerStar;
-
-            // Get user interaction
-            var userInteraction = _unitOfWork.Repository<UserDishInteraction>()
-                .FirstOrDefaultAsync(udi => udi.SmartDietUserId == userId && udi.DishId == dish.Id)
-                .Result;
-
-            // Calculate interaction points
-            var interactionPoints = userInteraction?.InteractionType switch
+            try
             {
-                InteractionType.Liked => _settings.Points.LikedDish,
-                InteractionType.Disliked => _settings.Points.DislikedDish,
-                _ => 0
-            };
+                // Calculate average rating
+                var ratings = await _unitOfWork.Repository<DishRating>()
+                    .FindAsync(dr => dr.DishId == dish.Id);
+                
+                var averageRating = ratings.Any() 
+                    ? ratings.Average(dr => dr.Rating) 
+                    : 0;
 
-            // Add points for new dishes
-            var newDishPoints = userInteraction == null ? _settings.Points.NewDish : 0;
+                var dishRatingPoints = averageRating * _settings.Points.DishRatingPerStar;
 
-            // Add seasonal bonus if applicable
-            var seasonalBonus = IsSeasonalDish(dish) ? _settings.Points.SeasonalBonus : 0;
+                // Get user interaction
+                var userInteraction = await _unitOfWork.Repository<UserDishInteraction>()
+                    .FirstOrDefaultAsync(udi => udi.SmartDietUserId == userId && udi.DishId == dish.Id);
 
-            return dishRatingPoints + interactionPoints + newDishPoints + seasonalBonus;
+                // Calculate interaction points
+                var interactionPoints = userInteraction?.InteractionType switch
+                {
+                    InteractionType.Liked => _settings.Points.LikedDish,
+                    InteractionType.Disliked => _settings.Points.DislikedDish,
+                    _ => 0
+                };
+
+                // Add points for new dishes
+                var newDishPoints = userInteraction == null ? _settings.Points.NewDish : 0;
+
+                // Add seasonal bonus if applicable
+                var seasonalBonus = IsSeasonalDish(dish) ? _settings.Points.SeasonalBonus : 0;
+
+                return dishRatingPoints + interactionPoints + newDishPoints + seasonalBonus;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating score for dish {dish.Id}: {ex}");
+                return 0;
+            }
         }
 
         private bool IsSeasonalDish(Dish dish)
