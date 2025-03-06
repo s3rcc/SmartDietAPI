@@ -9,6 +9,7 @@ using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
 using DTOs.RoleDTOs;
+using DTOs.SubcriptionDTOs;
 using DTOs.UserAllergyDTOs;
 using DTOs.UserFeedbackDTOs;
 using DTOs.UserPreferenceDTOs;
@@ -161,6 +162,13 @@ namespace Services.Mappers
             CreateMap<UserAllergy, UserAllergyResponse>()
                 .ForMember(dest => dest.FoodName, opt => opt.MapFrom(src => src.Food.Name));
             CreateMap<UserAllergyDTO, UserAllergy>();
+            #endregion UserAllergy
+
+            #region UserAllergy
+            CreateMap<Subcription, SubcriptionResponse>()
+                .ForMember(dest => dest.SubscriptionType, opt => opt.MapFrom(src => src.SubscriptionType.ToString()));
+            CreateMap<SubcriptionResponse, SubcriptionRequest>();
+            CreateMap<SubcriptionRequest, Subcription>();
             #endregion UserAllergy
         }
     }

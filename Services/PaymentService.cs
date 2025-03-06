@@ -1,10 +1,13 @@
-﻿using Azure;
+﻿using AutoMapper;
+using Azure;
+using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.PaymentDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS;
 using Net.payOS.Types;
+using Repositories.Interfaces;
 using Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,19 +21,27 @@ namespace Services
     {
         private readonly PayOS _payOS;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public PaymentService(PayOS payOS, IHttpContextAccessor httpContextAccessor)
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
+        public PaymentService(PayOS payOS, IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IMapper mapper, ITokenService tokenService)
         {
             _payOS = payOS;
             _httpContextAccessor = httpContextAccessor;
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _tokenService = tokenService;
         }
-        public async Task<CreatePaymentResult> Checkout()
+        public async Task<CreatePaymentResult> Checkout(List<CheckOutRequest> input)
         {
             try
             {
                 int orderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff"));
-                ItemData item = new ItemData("Mì tôm hảo hảo ly", 1, 1000);
-                List<ItemData> items = new List<ItemData> { item };
+                List<ItemData> items = new List<ItemData>();
 
+                foreach (var data in input) {
+                    items.Add(new ItemData (data.Name, data.Quantity, data.Price));                           
+                }
                 // Get the current request's base URL
                 var request = _httpContextAccessor.HttpContext.Request;
                 var baseUrl = $"{request.Scheme}://{request.Host}";
@@ -84,8 +95,26 @@ namespace Services
                 items.Add(item);
                 PaymentData paymentData = new PaymentData(orderCode, body.price, body.description, items, body.cancelUrl, body.returnUrl);
 
-                CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
+
+                await _unitOfWork.SaveChangeAsync();
+                CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
+                var userId = _tokenService.GetUserIdFromToken();
+
+                var userPayment = new UserPayment()
+                {
+                    Id = createPayment.orderCode.ToString(),
+                    description = body.productName,
+                    Amount = body.price,
+                    PaymentMethod = "QR",
+                    PaymentDate = DateTime.Now,
+                    PaymentStatus = "Pending",
+                    SmartDietUserId = userId,
+                };
+
+
+                await _unitOfWork.Repository<UserPayment>().AddAsync(userPayment);
+                
                 return createPayment;
             }
             catch (Exception exception)
@@ -116,6 +145,17 @@ namespace Services
             try
             {
                 PaymentLinkInformation paymentLinkInformation = await _payOS.cancelPaymentLink(orderId);
+                var userId = _tokenService.GetUserIdFromToken();
+
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().GetByIdAsync(orderId.ToString())
+                    ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
+
+                existingUserPayment.PaymentStatus = "Cancel";
+                existingUserPayment.LastUpdatedTime = DateTime.UtcNow;
+                existingUserPayment.LastUpdatedBy = userId;
+
+                await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
+                await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
             }
             catch (Exception exception)

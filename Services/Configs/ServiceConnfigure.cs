@@ -66,6 +66,7 @@ namespace Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
+            services.AddScoped<ISubcriptionService, SubcriptionService>();
 
             // Add new file handling services
             services.AddScoped<IFileHandlerService, FileHandlerService>();

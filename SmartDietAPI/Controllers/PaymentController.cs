@@ -1,9 +1,11 @@
-﻿using DTOs.AuthDTOs;
+﻿using DataAccessObjects.Migrations;
+using DTOs.AuthDTOs;
 using DTOs.PaymentDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS.Types;
 using Services.Interfaces;
+using System.Collections.Generic;
 
 namespace SmartDietAPI.Controllers
 {
@@ -17,9 +19,9 @@ namespace SmartDietAPI.Controllers
             _service = service;
         }
         [HttpPost("/create-payment-link")]
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout(List<CheckOutRequest> input)
         {
-            CreatePaymentResult result = await _service.Checkout();
+            CreatePaymentResult result = await _service.Checkout(input);
             return Ok(result);
         }
 

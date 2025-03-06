@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace BusinessObjects.Entity
 {
     public class UserPayment : BaseEntity
-    {  
+    {
+        public string description { get; set; }
         public float Amount { get; set; } 
         public string? PaymentMethod { get; set; } 
         public DateTime PaymentDate { get; set; } = DateTime.Now;
