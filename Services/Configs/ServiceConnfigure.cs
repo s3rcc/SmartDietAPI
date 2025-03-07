@@ -53,6 +53,7 @@ namespace Services
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
             services.AddScoped<IUserMealInteractionService, UserMealInteractionService>();
+            services.AddScoped<IUserDishInteractionService, UserDishInteractionService>();
 
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();

@@ -76,6 +76,10 @@ namespace Services.Mappers
             CreateMap<DishIngredient, DishIngredientResponse>()
                 .ForMember(dest => dest.FoodName, opt => opt
                 .MapFrom(src => src.Food));
+
+            // Interation mapping
+            CreateMap<UserDishInteractionDTO, UserDishInteraction>();
+            CreateMap<UserDishInteraction, UserDishInteractionResponse>();
             #endregion dish
 
             #region meal

@@ -39,6 +39,7 @@ namespace DataAccessObjects
         public DbSet<DishRecommendHistory> DishRecommendHistories { get; set; }
         public DbSet<UserPayment> UserPayments { get; set; }
         public DbSet<Subcription> Subcriptions { get; set; }
+        public DbSet<UserDishInteraction> UserDishInteractions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FoodAllergy>()
