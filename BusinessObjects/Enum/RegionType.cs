@@ -6,25 +6,30 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.FixedData
 {
+    [Flags]
     public enum RegionType
     {
-        American,
-        Italian,
-        Chinese,
-        Japanese,
-        Mexican,
-        Indian,
-        Thai,
-        Mediterranean,
-        French,
-        Korean,
-        Vietnamese,
-        MiddleEastern,
-        Greek,
-        Spanish,
-        Brazilian,
-        NViet,
-        TViet,
-        BViet
+        None = 0,
+        #region Old
+        //American,
+        //Italian,
+        //Chinese,
+        //Japanese,
+        //Mexican,
+        //Indian,
+        //Thai,
+        //Mediterranean,
+        //French,
+        //Korean,
+        //Vietnamese,
+        //MiddleEastern,
+        //Greek,
+        //Spanish,
+        //Brazilian,
+        #endregion
+
+        NViet = 1,
+        TViet = 2,
+        BViet = 4
     }
 }

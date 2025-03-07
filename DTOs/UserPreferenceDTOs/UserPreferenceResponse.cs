@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.FixedData;
 
 namespace DTOs.UserPreferenceDTOs
 {
@@ -12,7 +13,7 @@ namespace DTOs.UserPreferenceDTOs
 
         // Dietary Preferences
         public string PrimaryDietType { get; set; }
-        public string PrimaryRegionType { get; set; }
+        public List<RegionType> PrimaryRegionTypes { get; set; } = new List<RegionType>();
         public int DailyMealCount { get; set; }
         public int DishesPerMealCount { get; set; }
 

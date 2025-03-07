@@ -2,6 +2,7 @@
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
+using BusinessObjects.FixedData;
 using DTOs.UserPreferenceDTOs;
 using Microsoft.AspNetCore.Http;
 using Repositories.Interfaces;
@@ -26,6 +27,24 @@ namespace Services
             _tokenService = tokenService;
         }
 
+        private RegionType CombineRegionTypes(List<RegionType> regionTypes)
+        {
+            RegionType combined = RegionType.None;
+            foreach (var type in regionTypes)
+            {
+                combined |= type;
+            }
+            return combined;
+        }
+
+        private List<RegionType> SplitRegionTypes(RegionType combinedType)
+        {
+            return Enum.GetValues(typeof(RegionType))
+                .Cast<RegionType>()
+                .Where(r => r != RegionType.None && combinedType.HasFlag(r))
+                .ToList();
+        }
+
         public async Task<UserPreferenceResponse> GetUserPreferenceByIdAsync()
         {
             try
@@ -38,7 +57,9 @@ namespace Services
                                         ErrorCode.NOT_FOUND,
                                         "User preference not found!");
 
-                return _mapper.Map<UserPreferenceResponse>(userPreference);
+                var response = _mapper.Map<UserPreferenceResponse>(userPreference);
+                response.PrimaryRegionTypes = SplitRegionTypes(userPreference.PrimaryRegionType);
+                return response;
             }
             catch (ErrorException)
             {
@@ -56,7 +77,6 @@ namespace Services
             {
                 var userId = _tokenService.GetUserIdFromToken();
 
-                // Check if user preference already exists for the user
                 var existingPreference = await _unitOfWork.Repository<UserPreference>().FindAsync(
                     x => x.SmartDietUserId == userId);
 
@@ -71,7 +91,8 @@ namespace Services
                 var userPreference = _mapper.Map<UserPreference>(userPreferenceDto);
                 userPreference.SmartDietUserId = userId;
                 userPreference.CreatedTime = DateTime.UtcNow;
-                userPreference.CreatedBy = userId; // Set the user ID from the token
+                userPreference.CreatedBy = userId;
+                userPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.RegionTypes);
 
                 await _unitOfWork.Repository<UserPreference>().AddAsync(userPreference);
                 await _unitOfWork.SaveChangeAsync();
@@ -98,7 +119,6 @@ namespace Services
                                           ErrorCode.NOT_FOUND,
                                           "User preference not found!");
 
-                // Ensure the user is updating their own preference
                 if (existingPreference.CreatedBy != userId)
                 {
                     throw new ErrorException(
@@ -108,8 +128,9 @@ namespace Services
                 }
 
                 _mapper.Map(userPreferenceDto, existingPreference);
+                existingPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.RegionTypes);
                 existingPreference.LastUpdatedTime = DateTime.UtcNow;
-                existingPreference.LastUpdatedBy = userId; // Set the user ID from the token
+                existingPreference.LastUpdatedBy = userId;
 
                 await _unitOfWork.Repository<UserPreference>().UpdateAsync(existingPreference);
                 await _unitOfWork.SaveChangeAsync();

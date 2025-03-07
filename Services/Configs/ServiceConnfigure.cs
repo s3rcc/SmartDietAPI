@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
+using SmartDietAPI.Services;
 using Net.payOS;
 
 
@@ -77,6 +78,9 @@ namespace Services
             services.AddScoped<IExcelImportService<Dish>, ExcelImportService<Dish>>();
             services.AddScoped<IExcelImportService<Food>, ExcelImportService<Food>>();
 
+            // Add DishRecommendation settings configuration
+            services.Configure<DishRecommendationSettings>(configuration.GetSection("DishRecommendation"));
+
             // jwt middleware
             services.AddSingleton<TokenValidationParameters>(provider =>
             {
@@ -102,6 +106,9 @@ namespace Services
             });
 
             services.AddHttpContextAccessor();
+
+            // Add DishRecommendation service
+            services.AddScoped<IDishRecommendationService, DishRecommendationService>();
 
             return services;
         }

@@ -15,11 +15,22 @@ using DTOs.UserFeedbackDTOs;
 using DTOs.UserPreferenceDTOs;
 using DTOs.UserProfileDTos;
 using Microsoft.AspNetCore.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Services.Mappers
 {
     public class MappingProfiles : Profile
     {
+        private List<RegionType> SplitRegionTypes(RegionType combinedType)
+        {
+            return Enum.GetValues(typeof(RegionType))
+                .Cast<RegionType>()
+                .Where(r => r != RegionType.None && combinedType.HasFlag(r))
+                .ToList();
+        }
+
         public MappingProfiles()
         {
 
@@ -122,7 +133,7 @@ namespace Services.Mappers
             #region User Preference Mapping
             CreateMap<UserPreference, UserPreferenceResponse>()
                 .ForMember(x => x.PrimaryDietType, y => y.MapFrom(src => src.PrimaryDietType.ToString()))
-                .ForMember(x => x.PrimaryRegionType, y => y.MapFrom(src => src.PrimaryRegionType.ToString()))
+                .ForMember(x => x.PrimaryRegionTypes, y => y.MapFrom(src => SplitRegionTypes(src.PrimaryRegionType)))
                 .ForMember(x => x.DailyMealCount, y => y.MapFrom(src => src.DailyMealCount))
                 .ForMember(x => x.DishesPerMealCount, y => y.MapFrom(src => src.DishesPerMealCount))
                 .ForMember(x => x.MaxCookingTime, y => y.MapFrom(src => src.MaxCookingTime))
