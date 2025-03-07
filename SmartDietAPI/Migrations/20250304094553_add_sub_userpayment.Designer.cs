@@ -4,6 +4,7 @@ using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SmartDietAPI.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    partial class SmartDietDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250304094553_add_sub_userpayment")]
+    partial class add_sub_userpayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -727,18 +730,21 @@ namespace SmartDietAPI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LastUpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastUpdatedTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("MonthOfSubcription")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SubscriptionStatus")
                         .HasColumnType("nvarchar(max)");
@@ -924,10 +930,6 @@ namespace SmartDietAPI.Migrations
                     b.Property<string>("SmartDietUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

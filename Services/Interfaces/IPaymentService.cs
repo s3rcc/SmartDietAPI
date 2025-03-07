@@ -10,7 +10,7 @@ namespace Services.Interfaces
 {
     public interface IPaymentService
     {
-        Task<CreatePaymentResult> Checkout();
+        Task<CreatePaymentResult> Checkout(List<CheckOutRequest> input);
         bool payOSTransferHandler(WebhookType body);
          Task<CreatePaymentResult> CreatePaymentLink(CreatePaymentLinkRequest body);
           Task<PaymentLinkInformation> GetOrder(int orderId);
