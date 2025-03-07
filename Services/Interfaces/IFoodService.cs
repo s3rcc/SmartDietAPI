@@ -15,7 +15,7 @@ namespace Services.Interfaces
         Task<FoodResponse> GetDeletedFoodByIdAsync(string id);
         Task<IEnumerable<FoodResponse>> GetDeletedFoodsAsync();
         Task<IEnumerable<FoodResponse>> GetAllFoodsAsync();
-        Task<BasePaginatedList<FoodResponse>> GetAllFoodsAsync(int pageIndex, int pageSize, string? searchTearm);
+        Task<BasePaginatedList<FoodResponse>> GetAllFoodsAsync(int pageIndex, int pageSize, string? searchTerm);
         Task<FoodResponse> GetFoodByIdAsync(string id);
         Task CreateFoodAsync(FoodDTO food);
         Task UpdateFoodAsync(string foodId, FoodDTO foodDTO);

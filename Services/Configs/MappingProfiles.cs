@@ -84,6 +84,8 @@ namespace Services.Mappers
                 .ForMember(dest => dest.Image, opt => opt
                 .MapFrom(src => src.Dish.Image));
 
+            CreateMap<UserMealInteractionDTO, UserMealInteraction>();
+            CreateMap<UserMealInteraction, UserMealInteractionResponse>();
             #endregion meal
 
             #region User
