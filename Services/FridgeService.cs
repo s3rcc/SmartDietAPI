@@ -40,8 +40,12 @@ namespace Services
                 // Map FridgeItemDTOs to FridgeItem entities
                 var fridgeItems = _mapper.Map<List<FridgeItem>>(fridgeItemDTOs);
 
+                var existingItems = await _unitOfWork.Repository<FridgeItem>()
+            .FindAsync(fi => fi.FridgeId == fridgeId);
+
                 foreach (var item in fridgeItems)
                 {
+
                     // Validate item (e.g., expiration date cannot be earlier than purchase date)
                     if (item.ExpirationDate < item.PurchaseDate)
                     {
@@ -51,10 +55,24 @@ namespace Services
                     // Set required properties
                     item.CreatedTime = DateTime.UtcNow;
                     item.CreatedBy = userId; // Replace with the actual user ID if applicable
+                                             // Check if item exists in existing items
+                    var existingItem = existingItems.FirstOrDefault(fi =>
+                        fi.FoodId == item.FoodId &&
+                        fi.StorageLocation == item.StorageLocation);
+
+                    if (existingItem != null)
+                    {
+                        existingItem.Quantity += item.Quantity;
+                        _unitOfWork.Repository<FridgeItem>().UpdateAsync(existingItem);
+                    }
+                    else
+                    {
+                        await _unitOfWork.Repository<FridgeItem>().AddAsync(item);
+                    }
                 }
 
                 // Add items to the database
-                await _unitOfWork.Repository<FridgeItem>().AddRangeAsync(fridgeItems);
+                //await _unitOfWork.Repository<FridgeItem>().AddRangeAsync(fridgeItems);
                 await _unitOfWork.SaveChangeAsync();
             }
             catch (ErrorException)

@@ -4,6 +4,7 @@ using DataAccessObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SmartDietAPI.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    partial class SmartDietDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250305162911_Update_property")]
+    partial class Update_property
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,51 +131,6 @@ namespace SmartDietAPI.Migrations
                     b.HasIndex("FoodId");
 
                     b.ToTable("DishIngredients");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entity.DishRecommendHistory", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DishId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("LastUpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("LastUpdatedTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("RecommendationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SmartDietUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DishId");
-
-                    b.HasIndex("SmartDietUserId");
-
-                    b.ToTable("DishRecommendHistories");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entity.FavoriteDish", b =>
@@ -1268,25 +1226,6 @@ namespace SmartDietAPI.Migrations
                     b.Navigation("Dish");
 
                     b.Navigation("Food");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entity.DishRecommendHistory", b =>
-                {
-                    b.HasOne("BusinessObjects.Entity.Dish", "Dish")
-                        .WithMany()
-                        .HasForeignKey("DishId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BusinessObjects.Entity.SmartDietUser", "SmartDietUser")
-                        .WithMany()
-                        .HasForeignKey("SmartDietUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Dish");
-
-                    b.Navigation("SmartDietUser");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entity.FavoriteDish", b =>

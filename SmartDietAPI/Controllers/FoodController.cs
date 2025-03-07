@@ -16,9 +16,9 @@ namespace SmartDietAPI.Controllers
             _foodService = foodService;
         }
         [HttpGet("all")]
-        public async Task<IActionResult> GetFoods([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTearm = null)
+        public async Task<IActionResult> GetFoods([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTerm = null)
         {
-            var result = await _foodService.GetAllFoodsAsync(pageIndex, pageSize, searchTearm);
+            var result = await _foodService.GetAllFoodsAsync(pageIndex, pageSize, searchTerm);
             return Ok(ApiResponse<object>.Success(result));
         }
         [HttpGet("{id}")]

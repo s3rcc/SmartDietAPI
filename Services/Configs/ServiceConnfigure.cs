@@ -13,6 +13,7 @@ using System.Text;
 using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using SmartDietAPI.Services;
+using Net.payOS;
 
 
 namespace Services
@@ -32,9 +33,19 @@ namespace Services
                 //services.AddScoped<SeedData>();
             //
             services.Configure<MealRecommendationSettings>(configuration.GetSection("MealRecommendation"));
-
             // Unit of work DI
+            services.AddScoped<Net.payOS.PayOS>(provider =>
+            {
+                // Lấy các giá trị từ cấu hình (appsettings.json hoặc environment variables)
+                string clientId = configuration["PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID in configuration");
+                string apiKey = configuration["PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY in configuration");
+                string checksumKey = configuration["PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY in configuration");
+
+                // Trả về instance của PayOS
+                return new Net.payOS.PayOS(clientId, apiKey, checksumKey);
+            });
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IPaymentService, PaymentService>();
             // Other service DI
             services.AddScoped<IFoodService, FoodService>();
             services.AddScoped<IDishService, DishService>();
@@ -42,6 +53,7 @@ namespace Services
 
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
+            services.AddScoped<IUserMealInteractionService, UserMealInteractionService>();
 
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();
@@ -56,6 +68,9 @@ namespace Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
+            services.AddScoped<ISubcriptionService, SubcriptionService>();
+            services.AddScoped<IMealRecommendationServiceV2, MealRecommendationServiceV2>();
+
 
             // Add new file handling services
             services.AddScoped<IFileHandlerService, FileHandlerService>();

@@ -67,8 +67,9 @@ namespace Services
                     );
 
                 var filteredMeals = allMeals.Where(m =>
-                    !recentMealIds.Contains(m.Id) &&
+                    //!recentMealIds.Contains(m.Id) &&
                     m.MealDishes.Any(md =>
+
                         md.Dish.DietType == userPreferences.PrimaryDietType
                         &&
                         (userPreferences.PrimaryRegionType.HasFlag(md.Dish.RegionType) ||
@@ -79,6 +80,7 @@ namespace Services
                         md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty
                         &&
                         !md.Dish.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
+
                     )).ToList();
 
                 var scoredMeals = filteredMeals.Select(m => new
