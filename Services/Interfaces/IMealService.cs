@@ -12,7 +12,7 @@ namespace Services.Interfaces
     public interface IMealService
     {
         Task<IEnumerable<MealResponse>> GetAllMealsAsync();
-        Task<BasePaginatedList<MealResponse>> GetAllMealsAsync(int pageIndex, int pageSize, string? searchTearm);
+        Task<BasePaginatedList<MealResponse>> GetAllMealsAsync(int pageIndex, int pageSize, string? searchTerm);
         Task<MealResponse> GetMealByIdAsync(string id);
         Task CreateMealAsync(MealDTO Meal);
         Task UpdateMealAsync(string id, MealDTO foodDTO);

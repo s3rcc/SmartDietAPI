@@ -52,6 +52,7 @@ namespace Services
 
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();
+            services.AddScoped<IUserMealInteractionService, UserMealInteractionService>();
 
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IFridgeService, FridgeService>();
@@ -67,6 +68,8 @@ namespace Services
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRecommendationService, RecommendationService>();
             services.AddScoped<ISubcriptionService, SubcriptionService>();
+            services.AddScoped<IMealRecommendationServiceV2, MealRecommendationServiceV2>();
+
 
             // Add new file handling services
             services.AddScoped<IFileHandlerService, FileHandlerService>();

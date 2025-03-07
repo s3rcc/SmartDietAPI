@@ -4,6 +4,7 @@ using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.DishDTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Interfaces;
 using Services.Interfaces;
 using System;
@@ -154,7 +155,8 @@ namespace Services
             try
             {
                 var dishes = await _unitOfWork.Repository<Dish>().GetAllAsync(
-                    includes: x => x.DishIngredients);
+                    include: x => x.Include(x => x.DishIngredients)
+                    .ThenInclude(x => x.Food));
 
                 return _mapper.Map<IEnumerable<DishResponse>>(dishes);
             }
@@ -175,7 +177,8 @@ namespace Services
                 BasePaginatedList<Dish> dishes = await _unitOfWork.Repository<Dish>().GetAllWithPaginationAsync(
                     pageIndex,
                     pageSize,
-                    includes: x => x.DishIngredients,
+                    include: x => x.Include(x => x.DishIngredients)
+                    .ThenInclude(x => x.Food),
                     searchTerm: x => string.IsNullOrEmpty(searchTerm) || x.Name.Contains(searchTerm),
                     orderBy: x => x.OrderBy(d => d.Name));
 
@@ -207,7 +210,8 @@ namespace Services
             {
                 var dish = await _unitOfWork.Repository<Dish>().GetByIdAsync(
                     dishId,
-                    includes: x => x.DishIngredients)
+                    include: x => x.Include(x => x.DishIngredients)
+                    .ThenInclude(x => x.Food))
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Dish does not exist!");
 
                 return _mapper.Map<DishResponse>(dish);
