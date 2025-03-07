@@ -24,8 +24,7 @@ namespace Services
         {
             services.AddDbContext<SmartDietDbContext>(options =>
                 options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection"), 
-                    b => b.MigrationsAssembly("SmartDietAPI")));
+                    configuration.GetConnectionString("DefaultConnection")));
             // Email
             services.AddTransient<IEmailService, EmailSevice>();
             //seed
