@@ -33,19 +33,19 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> AddSubcription(SubcriptionRequest request)
         {
             await _service.CreateSubcriptionAsync(request);
-            return Ok(ApiResponse<object>.Success(null, "Subcription created successfully", 201));
+            return Ok(ApiResponse<object>.Success(null, "Subscription created successfully", 201));
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubcription(string id, SubcriptionRequest request)
         {
             await _service.UpdateSubcriptionAsync(id, request);
-            return Ok(ApiResponse<object>.Success(null, "Subcription updated successfully"));
+            return Ok(ApiResponse<object>.Success(null, "Subscription updated successfully"));
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDish(string id)
         {
             await _service.DeleteSubcriptionAsync(id);
-            return Ok(ApiResponse<object>.Success(null, "Subcription deleted successfully"));
+            return Ok(ApiResponse<object>.Success(null, "Subscription deleted successfully"));
         }
     }
 }
