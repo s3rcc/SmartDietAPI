@@ -130,13 +130,21 @@ namespace Services
             try
             {
                 PaymentLinkInformation paymentLinkInformation = await _payOS.getPaymentLinkInformation(orderId);
+                var userId = _tokenService.GetUserIdFromToken();
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().GetByIdAsync(orderId.ToString())
+                  ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
+
+                existingUserPayment.PaymentStatus = paymentLinkInformation.status.ToString();
+                existingUserPayment.LastUpdatedTime = DateTime.UtcNow;
+                existingUserPayment.LastUpdatedBy = userId;
+
+                await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
+                await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
             }
             catch (System.Exception exception)
             {
-
                 throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get order error");
-
             }
 
         }

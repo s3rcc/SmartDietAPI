@@ -44,7 +44,16 @@ namespace Services.Configs
                     }
                     else
                     {
-                        await _context.Database.MigrateAsync();
+                        var pendingMigrations = await _context.Database.GetPendingMigrationsAsync();
+                        if (pendingMigrations.Any())
+                        {
+                            _logger.LogInformation("Applying pending migrations: {0}", string.Join(", ", pendingMigrations));
+                            await _context.Database.MigrateAsync();
+                        }
+                        else
+                        {
+                            _logger.LogInformation("No pending migrations. Database is up to date.");
+                        }
                     }
                 }
             }
