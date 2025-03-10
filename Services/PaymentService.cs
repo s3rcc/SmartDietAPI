@@ -97,24 +97,25 @@ namespace Services
 
 
 
-                await _unitOfWork.SaveChangeAsync();
                 CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
                 var userId = _tokenService.GetUserIdFromToken();
 
                 var userPayment = new UserPayment()
                 {
                     Id = createPayment.orderCode.ToString(),
-                    description = body.productName,
+                    description = body.description,
                     Amount = body.price,
                     PaymentMethod = "QR",
                     PaymentDate = DateTime.Now,
                     PaymentStatus = "Pending",
                     SmartDietUserId = userId,
+                    CreatedBy = userId,
+                    CreatedTime = DateTime.Now,
                 };
 
 
                 await _unitOfWork.Repository<UserPayment>().AddAsync(userPayment);
-                
+                await _unitOfWork.SaveChangeAsync();
                 return createPayment;
             }
             catch (Exception exception)
@@ -129,13 +130,21 @@ namespace Services
             try
             {
                 PaymentLinkInformation paymentLinkInformation = await _payOS.getPaymentLinkInformation(orderId);
+                var userId = _tokenService.GetUserIdFromToken();
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().GetByIdAsync(orderId.ToString())
+                  ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
+
+                existingUserPayment.PaymentStatus = paymentLinkInformation.status.ToString();
+                existingUserPayment.LastUpdatedTime = DateTime.UtcNow;
+                existingUserPayment.LastUpdatedBy = userId;
+
+                await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
+                await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
             }
             catch (System.Exception exception)
             {
-
                 throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get order error");
-
             }
 
         }
@@ -150,7 +159,7 @@ namespace Services
                 var existingUserPayment = await _unitOfWork.Repository<UserPayment>().GetByIdAsync(orderId.ToString())
                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
 
-                existingUserPayment.PaymentStatus = "Cancel";
+                existingUserPayment.PaymentStatus = paymentLinkInformation.status.ToString();
                 existingUserPayment.LastUpdatedTime = DateTime.UtcNow;
                 existingUserPayment.LastUpdatedBy = userId;
 
