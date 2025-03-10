@@ -44,6 +44,13 @@ namespace SmartDietAPI.Controllers
             return Ok(ApiResponse<object>.Success(null, "Created successfully", 201));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CreateInteraction(UserDishInteractionDTO dto)
+        {
+            var result = await _service.CreateDishInteractionAsync(dto);
+            return Ok(ApiResponse<object>.Success(result, "Created successfully", 201));
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, UserDishInteractionDTO dto)
         {

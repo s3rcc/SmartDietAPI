@@ -19,11 +19,13 @@ namespace Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public UserFeedbackService(IUnitOfWork unitOfWork, IMapper mapper)
+        public UserFeedbackService(IUnitOfWork unitOfWork, IMapper mapper, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         public async Task CreateUserFeedbackAsync(UserFeedbackDTO userFeedbackDTO)
@@ -31,12 +33,19 @@ namespace Services
 
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
+
                 var userFeedback = _mapper.Map<UserFeedback>(userFeedbackDTO);
 
-                userFeedback.CreatedBy = userFeedbackDTO.SmartDietUserId;
+                userFeedback.SmartDietUserId = userId;
+                userFeedback.CreatedBy = userId;
 
                 await _unitOfWork.Repository<UserFeedback>().AddAsync(userFeedback);
                 await _unitOfWork.SaveChangeAsync();
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -48,6 +57,8 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
+
                 var userFeedback = await _unitOfWork.Repository<UserFeedback>().GetByIdAsync(id)
                     ?? throw new ErrorException(
                         StatusCodes.Status404NotFound,
@@ -56,6 +67,10 @@ namespace Services
 
                 _unitOfWork.Repository<UserFeedback>().DeleteAsync(userFeedback);
                 await _unitOfWork.SaveChangeAsync();
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -67,6 +82,8 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
+
                 var userFeedbacks = await _unitOfWork.Repository<UserFeedback>().FindAsync(
                     predicate: feedback => feedback.SmartDietUserId == id,
                     orderBy: query => query.OrderByDescending(f => f.FeedbackDate)
@@ -78,6 +95,10 @@ namespace Services
 
                 return _mapper.Map<IEnumerable<UserFeedbackResponse>>(userFeedbacks);
             }
+            catch (ErrorException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
@@ -88,6 +109,8 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
+
                 var userFeedbacks = await _unitOfWork.Repository<UserFeedback>().GetAllAsync(
                     orderBy:  query => query.OrderByDescending(f => f.FeedbackDate)
                     )
@@ -97,6 +120,10 @@ namespace Services
                         "User Feedback not found!");
 
                 return _mapper.Map<IEnumerable<UserFeedbackResponse>>(userFeedbacks);
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

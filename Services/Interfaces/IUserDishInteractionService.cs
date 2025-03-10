@@ -10,6 +10,7 @@ namespace Services.Interfaces
     public interface IUserDishInteractionService
     {
         Task CreateUserDishInteractionAsync(UserDishInteractionDTO dto);
+        Task<UserDishInteractionResponse> CreateDishInteractionAsync(UserDishInteractionDTO dto);
         Task DeleteUserDishInteractionAsync(string id);
         Task<IEnumerable<UserDishInteractionResponse>> GetAllUserDishInteractionsAsync();
         Task<UserDishInteractionResponse> GetUserDishInteractionByDishIdAsync(string id);

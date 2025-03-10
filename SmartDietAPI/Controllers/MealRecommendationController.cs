@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BusinessObjects.Base;
+using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 
 namespace SmartDietAPI.Controllers
@@ -18,28 +19,28 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> GetRecommendations()
         {
             var recommendations = await _recommendationService.GetRecommendedMealsAsync();
-            return Ok(recommendations);
+            return Ok(ApiResponse<object>.Success(recommendations));
         }
 
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateRecommendations()
         {
             var recommendations = await _recommendationService.GenerateRecommendationsAsync();
-            return Ok(recommendations);
+            return Ok(ApiResponse<object>.Success(null, "Generated successfully", 201));
         }
 
         [HttpPost("regenerate")]
         public async Task<IActionResult> RegenerateRecommendations()
         {
             var recommendations = await _recommendationService.RegenerateRecommendationsAsync();
-            return Ok(recommendations);
+            return Ok(ApiResponse<object>.Success(null, "Generated successfully", 201));
         }
 
         [HttpGet("history")]
         public async Task<IActionResult> GetRecommendationHistory()
         {
             var history = await _recommendationService.GetRecommendationHistoryAsync();
-            return Ok(history);
+            return Ok(ApiResponse<object>.Success(history));
         }
     }
 }

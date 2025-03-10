@@ -159,14 +159,15 @@ namespace Services
         private List<Meal> SelectDiverseMeals(IEnumerable<dynamic> scoredMeals, int count)
         {
             // Group by diet type first
-            
+
             var grouped = scoredMeals
-                .GroupBy(
-                m => m.Meal.MealDishes.FirstOrDefault()?.Dish.DietType
-               
-                )
-                .SelectMany(g => g.Take(_settings.MaxMealsPerCategory))
-                .ToList();
+                    .GroupBy(m =>
+                        ((IEnumerable<MealDish>)m.Meal.MealDishes) // Explicit cast
+                        .FirstOrDefault()?                      // LINQ FirstOrDefault
+                        .Dish?.DietType                         // Null-safe navigation
+                        )
+       .SelectMany(g => g.Take(_settings.MaxMealsPerCategory))
+       .ToList();
 
             // Apply MMR-like selection
             var selected = new List<Meal>();
@@ -244,12 +245,20 @@ namespace Services
         {
             try
             {
+                // Fetch user id
                 var userId = _tokenService.GetUserIdFromToken();
+                // Fetch user preference
+                var userPreferences = await _unitOfWork.Repository<UserPreference>()
+            .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
+            ?? throw new Exception("User preferences not found");
+                // Get recommendation and filter the newest recommendation
                 var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId &&
                         r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
                         include: query => query.Include(x => x.Meal)
                         .ThenInclude(x => x.MealDishes)
+                        .OrderByDescending(r => r.RecommendationDate) // Order by newest first
+            .Take(userPreferences.DailyMealCount)
                         );
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));

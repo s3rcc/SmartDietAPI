@@ -33,20 +33,34 @@ namespace Services
             {
                 var userId = _tokenService.GetUserIdFromToken();
 
-                var existing = await _unitOfWork.Repository<UserMealInteraction>().FindAsync(
-                    x => x.SmartDietUserId == userId && x.MealId == dto.MealId && x.InteractionType == dto.InteractionType);
+                var existing = await _unitOfWork.Repository<UserMealInteraction>().FirstOrDefaultAsync(
+                    x => x.SmartDietUserId == userId && x.MealId == dto.MealId);
 
-                if (existing.Any())
-                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Interaction already exists!");
+                //if (existing != null)
+                //    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Interaction already exists!");
 
-                var interaction = _mapper.Map<UserMealInteraction>(dto);
-                interaction.SmartDietUserId = userId;
-                interaction.CreatedBy = userId;
-                interaction.CreatedTime = DateTime.UtcNow;
-                interaction.LastInteractionTime = DateTime.UtcNow;
+                if (existing != null)
+                {
+                    // Interaction exists, so update it
+                    var updateDto = new UserMealInteractionDTO
+                    {
+                        MealId = dto.MealId,
+                        InteractionType = dto.InteractionType
+                    };
+                    await UpdateUserMealInteractionAsync(existing.Id, updateDto);
+                }
+                else
+                {
+                    // No interaction exists, so create a new one
+                    var interaction = _mapper.Map<UserMealInteraction>(dto);
+                    interaction.SmartDietUserId = userId;
+                    interaction.CreatedBy = userId;
+                    interaction.CreatedTime = DateTime.UtcNow;
+                    interaction.LastInteractionTime = DateTime.UtcNow;
 
-                await _unitOfWork.Repository<UserMealInteraction>().AddAsync(interaction);
-                await _unitOfWork.SaveChangeAsync();
+                    await _unitOfWork.Repository<UserMealInteraction>().AddAsync(interaction);
+                    await _unitOfWork.SaveChangeAsync();
+                }
             }
             catch (ErrorException) { throw; }
             catch (Exception ex)
@@ -114,6 +128,50 @@ namespace Services
             }
         }
 
+        public async Task<UserMealInteractionResponse> CreateMealInteractionAsync(UserMealInteractionDTO dto)
+        {
+            try
+            {
+                var userId = _tokenService.GetUserIdFromToken();
+
+                var existing = await _unitOfWork.Repository<UserMealInteraction>().FirstOrDefaultAsync(
+                    x => x.SmartDietUserId == userId && x.MealId == dto.MealId);
+
+                if (existing != null)
+                {
+                    // Nếu đã tồn tại, cập nhật thay vì tạo mới
+                    var updateDto = new UserMealInteractionDTO
+                    {
+                        MealId = dto.MealId,
+                        InteractionType = dto.InteractionType
+                    };
+                    await UpdateUserMealInteractionAsync(existing.Id, updateDto);
+                    existing.InteractionType = dto.InteractionType;
+                    existing.LastInteractionTime = DateTime.UtcNow;
+                    await _unitOfWork.SaveChangeAsync();
+                    return _mapper.Map<UserMealInteractionResponse>(existing);
+                }
+                else
+                {
+                    // Nếu chưa có, tạo mới
+                    var interaction = _mapper.Map<UserMealInteraction>(dto);
+                    interaction.SmartDietUserId = userId;
+                    interaction.CreatedBy = userId;
+                    interaction.CreatedTime = DateTime.UtcNow;
+                    interaction.LastInteractionTime = DateTime.UtcNow;
+
+                    await _unitOfWork.Repository<UserMealInteraction>().AddAsync(interaction);
+                    await _unitOfWork.SaveChangeAsync();
+
+                    return _mapper.Map<UserMealInteractionResponse>(interaction);
+                }
+            }
+            catch (ErrorException) { throw; }
+            catch (Exception ex)
+            {
+                throw new ErrorException(StatusCodes.Status500InternalServerError, ErrorCode.INTERNAL_SERVER_ERROR, ex.Message);
+            }
+        }
         public async Task<UserMealInteractionResponse> GetUserMealInteractionByMealIdAsync(string id)
         {
             try

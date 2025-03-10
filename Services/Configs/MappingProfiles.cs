@@ -75,7 +75,7 @@ namespace Services.Mappers
 
             CreateMap<DishIngredient, DishIngredientResponse>()
                 .ForMember(dest => dest.FoodName, opt => opt
-                .MapFrom(src => src.Food));
+                .MapFrom(src => src.Food.Name));
 
             // Interation mapping
             CreateMap<UserDishInteractionDTO, UserDishInteraction>();
@@ -157,11 +157,7 @@ namespace Services.Mappers
             #endregion
 
             #region User Feedback Mappings
-            CreateMap<UserFeedback, UserFeedbackResponse>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId))
-                .ForMember(dest => dest.StarRating, opt => opt.MapFrom(src => src.StarRating))
-                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment));
+            CreateMap<UserFeedback, UserFeedbackResponse>();
 
             CreateMap<UserFeedbackDTO, UserFeedback>();
             #endregion 

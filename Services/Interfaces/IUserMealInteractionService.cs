@@ -11,6 +11,7 @@ namespace Services.Interfaces
     public interface IUserMealInteractionService
     {
         Task CreateUserMealInteractionAsync(UserMealInteractionDTO dto);
+        Task<UserMealInteractionResponse> CreateMealInteractionAsync(UserMealInteractionDTO dto);
         Task DeleteUserMealInteractionAsync(string id);
         Task<IEnumerable<UserMealInteractionResponse>> GetAllUserMealInteractionsAsync();
         Task<UserMealInteractionResponse> GetUserMealInteractionByMealIdAsync(string id);
