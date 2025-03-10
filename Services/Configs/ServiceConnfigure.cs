@@ -36,9 +36,9 @@ namespace Services
             services.AddScoped<Net.payOS.PayOS>(provider =>
             {
                 // Lấy các giá trị từ cấu hình (appsettings.json hoặc environment variables)
-                string clientId = configuration["PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID in configuration");
-                string apiKey = configuration["PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY in configuration");
-                string checksumKey = configuration["PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY in configuration");
+                string clientId = configuration["PAYOS_CLIENT:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID in configuration");
+                string apiKey = configuration["PAYOS_CLIENT:PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY in configuration");
+                string checksumKey = configuration["PAYOS_CLIENT:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY in configuration");
 
                 // Trả về instance của PayOS
                 return new Net.payOS.PayOS(clientId, apiKey, checksumKey);
