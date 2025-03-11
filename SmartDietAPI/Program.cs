@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
@@ -14,6 +15,7 @@ using Services;
 using Services.Configs;
 using Services.Interfaces;
 using SmartDietAPI.MiddleWare;
+using System.Reflection;
 using System.Text;
 
 
@@ -25,6 +27,9 @@ namespace SmartDietAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var environment = builder.Environment.EnvironmentName;
+            Console.WriteLine($"Environment: {environment}");
+            Console.WriteLine($"Connection string: {builder.Configuration.GetConnectionString("DefaultConnection")}");
             //builder.WebHost.UseUrls("https://0.0.0.0:7095");
 
             var configuration  = builder.Configuration;
@@ -89,6 +94,11 @@ namespace SmartDietAPI
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "SmartDiet.API", Version = "v1" });
+
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+                c.IncludeXmlComments(xmlPath);
+
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = "Example: \"Authorization: Bearer {token}\"",
@@ -175,10 +185,19 @@ namespace SmartDietAPI
                 }
             }
             // Configure the HTTP request pipeline.
-                app.UseSwagger();
+            app.UseHttpsRedirection();
 
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SearchApi v1"));
+            app.UseSwagger();
 
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartDiet API v1");
+                // Serve Swagger UI at root in Production
+                if (!app.Environment.IsProduction())
+                {
+                    options.RoutePrefix = string.Empty;
+                }
+            });
             app.UseCors("AllowAllOrigins");
 
 
@@ -186,11 +205,10 @@ namespace SmartDietAPI
             app.UseMiddleware<ValidationMiddleware>();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseRouting();
-            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapControllers();
             app.UseSession();
+            app.MapControllers();
             app.Run();
         }
     }

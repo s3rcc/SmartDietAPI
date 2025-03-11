@@ -177,12 +177,12 @@ namespace Services.Mappers
             CreateMap<UserAllergyDTO, UserAllergy>();
             #endregion UserAllergy
 
-            #region UserAllergy
+            #region Subcription
             CreateMap<Subcription, SubcriptionResponse>()
                 .ForMember(dest => dest.SubscriptionType, opt => opt.MapFrom(src => src.SubscriptionType.ToString()));
             CreateMap<SubcriptionResponse, SubcriptionRequest>();
             CreateMap<SubcriptionRequest, Subcription>();
-            #endregion UserAllergy
+            #endregion Subcription
         }
     }
 }

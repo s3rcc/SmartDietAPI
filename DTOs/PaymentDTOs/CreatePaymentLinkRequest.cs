@@ -10,6 +10,7 @@ namespace DTOs.PaymentDTOs
     {
         public string productName { get; set; }
         public string description { get; set; }
+        public string subcriptionId { get; set; }
         
         public int price { get; set; }
        public string returnUrl { get; set; }
