@@ -3,6 +3,7 @@ using Azure;
 using BusinessObjects.Entity;
 using BusinessObjects.Exceptions;
 using DTOs.PaymentDTOs;
+using MailKit.Search;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS;
@@ -99,11 +100,13 @@ namespace Services
 
                 CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
                 var userId = _tokenService.GetUserIdFromToken();
-
+                var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
+                                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subcription not found!");
                 var userPayment = new UserPayment()
                 {
                     Id = createPayment.orderCode.ToString(),
                     description = body.description,
+                    SubcriptionId = body.subcriptionId,
                     Amount = body.price,
                     PaymentMethod = "QR",
                     PaymentDate = DateTime.Now,
@@ -112,8 +115,6 @@ namespace Services
                     CreatedBy = userId,
                     CreatedTime = DateTime.Now,
                 };
-
-
                 await _unitOfWork.Repository<UserPayment>().AddAsync(userPayment);
                 await _unitOfWork.SaveChangeAsync();
                 return createPayment;
@@ -166,6 +167,43 @@ namespace Services
                 await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
                 await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
+            }
+            catch (Exception exception)
+            {
+
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+
+            }
+
+        }
+        public async Task<IEnumerable<PaymentIsPaidResponse>> GetPaymentbyUserId(string id)
+        {
+            try
+            {
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().FindAsync(x => x.SmartDietUserId == id)
+                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
+                var responseList = new List<PaymentIsPaidResponse>();
+
+                foreach (var payment in existingUserPayment)
+                {
+                    var subscription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(payment.SubcriptionId)
+                        ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subcription does not exist!");
+
+                    var response = new PaymentIsPaidResponse
+                    {
+                        Name = subscription.Name,
+                        Description = payment.description,
+                        SmartDietUserId = payment.SmartDietUserId,
+                        SubscriptionId = subscription.Id,
+                        StartDate = payment.CreatedTime,
+                        EndDate = payment.CreatedTime.AddMonths(subscription.MonthOfSubcription)
+                    };
+
+                    responseList.Add(response);
+                }
+
+
+                return responseList;
             }
             catch (Exception exception)
             {

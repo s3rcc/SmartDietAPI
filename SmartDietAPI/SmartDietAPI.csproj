@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>f1204d72-bd4b-4fc6-ba7c-ae95274c3742</UserSecretsId>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,15 @@
     <ProjectReference Include="..\BusinessObjects\BusinessObjects.csproj" />
     <ProjectReference Include="..\DTOs\DTOs.csproj" />
     <ProjectReference Include="..\Services\Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.Production.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

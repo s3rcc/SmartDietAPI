@@ -14,7 +14,9 @@ namespace BusinessObjects.Entity
         public string? PaymentMethod { get; set; } 
         public DateTime PaymentDate { get; set; } = DateTime.Now;
         public string? PaymentStatus { get; set; }
+        public string SubcriptionId { get; set; }
         public string SmartDietUserId { get; set; }
+        public Subcription Subcription { get; set; }
         public SmartDietUser SmartDietUser { get; set; }
     }
 }

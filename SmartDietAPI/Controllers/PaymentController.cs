@@ -1,7 +1,9 @@
-﻿using DataAccessObjects.Migrations;
+﻿using BusinessObjects.Base;
+using DataAccessObjects.Migrations;
 using DTOs.AuthDTOs;
 using DTOs.PaymentDTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS.Types;
 using Services.Interfaces;
@@ -22,7 +24,7 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> Checkout(List<CheckOutRequest> input)
         {
             CreatePaymentResult result = await _service.Checkout(input);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
         }
 
         [HttpPost("create")]
@@ -30,20 +32,26 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
             CreatePaymentResult result = await _service.CreatePaymentLink(body);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
 
         }
         [HttpGet("get-order/{orderId}")]
         public async Task<IActionResult> GetOrder([FromRoute] int orderId)
         {
             PaymentLinkInformation result =  await _service.GetOrder(orderId);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
+        }
+        [HttpGet("get-order-by/{userId}")]
+        public async Task<IActionResult> GetPaymentbyUserId([FromRoute] string userId)
+        {
+            var result = await _service.GetPaymentbyUserId(userId);
+            return Ok(ApiResponse<object>.Success(result));
         }
         [HttpPut("cancel-order/{orderId}")]
         public async Task<IActionResult> CancelOrder([FromRoute] int orderId)
         {
             PaymentLinkInformation result =  await _service.CancelOrder(orderId);
-            return Ok(result);
+            return Ok(ApiResponse<object>.Success(result));
         }
         [HttpPost("payos_transfer_handler")]
         public IActionResult PayOSTransferHandler(WebhookType body)
@@ -51,18 +59,20 @@ namespace SmartDietAPI.Controllers
             var isTransferSuccessful = _service.payOSTransferHandler(body);
             if (isTransferSuccessful)
             {
-                return Ok("Transfer successful");
+                return Ok(ApiResponse<object>.Success(null, "Transfer successful"));
             }
             else
             {
-                return BadRequest("Transfer failed"); // Hoặc bạn có thể xử lý theo cách khác nếu không thành công
+                return Ok(ApiResponse<object>.Error(null, "Transfer failed"));
+
             }
         }
         [HttpPost("confirm-webhook")]
         public async Task<IActionResult> ConfirmWebhook(ConfirmWebhookRequest body)
         {
            await _service.ConfirmWebhook(body);
-            return Ok("Confirm-wedhook");
+            return Ok(ApiResponse<object>.Success(null, "Confirm-wedhook"));
+
         }
     }
 }
