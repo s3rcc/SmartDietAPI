@@ -54,7 +54,9 @@ namespace Services
                 // Set create time and user
                 meal.CreatedTime = DateTime.UtcNow;
                 meal.CreatedBy = userId;
-
+                meal.LastUpdatedTime = DateTime.UtcNow;
+                meal.LastUpdatedBy = userId;
+                
                 await _unitOfWork.Repository<Meal>().AddAsync(meal);
                 await _unitOfWork.SaveChangeAsync();
 
@@ -146,7 +148,7 @@ namespace Services
                     include: query => query.Include(m => m.MealDishes)
                     .ThenInclude(d => d.Dish),
                     searchTerm: x => string.IsNullOrEmpty(searchTerm) || x.Name.Contains(searchTerm),
-                    orderBy: x => x.OrderBy(f => f.Name)
+                    orderBy: x => x.OrderByDescending(m => m.LastUpdatedTime).ThenByDescending(m => m.CreatedTime)
                 );
 
                 if (meals == null || !meals.Items.Any())
