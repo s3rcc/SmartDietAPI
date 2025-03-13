@@ -109,7 +109,7 @@ namespace Services
 
 
                 var existingUserPayment = await _unitOfWork.Repository<UserPayment>()
-                    .FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "success", include: x => x.Include(up => up.Subcription));
+                    .FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid", include: x => x.Include(up => up.Subcription));
 
                 if (existingUserPayment != null && existingUserPayment.CreatedTime.AddMonths(existingUserPayment.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
                     var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId);
@@ -213,7 +213,7 @@ namespace Services
             try
             {
                 var userId = _tokenService.GetUserIdFromToken();
-                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "success")
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid")
                 ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
 
                 var subscription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId)
