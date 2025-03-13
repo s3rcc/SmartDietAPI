@@ -193,10 +193,10 @@ namespace SmartDietAPI
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartDiet API v1");
                 // Serve Swagger UI at root in Production
-                if (!app.Environment.IsProduction())
-                {
-                    options.RoutePrefix = string.Empty;
-                }
+                //if (!app.Environment.IsProduction())
+                //{
+                //    options.RoutePrefix = string.Empty;
+                //}
             });
             app.UseCors("AllowAllOrigins");
 

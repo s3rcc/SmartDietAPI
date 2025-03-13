@@ -139,6 +139,10 @@ namespace Services
                 await _unitOfWork.SaveChangeAsync();
                 return createPayment;
             }
+            catch (ErrorException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Failed to create payment link");
@@ -162,6 +166,10 @@ namespace Services
                 await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
                 await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (System.Exception exception)
             {
@@ -187,6 +195,10 @@ namespace Services
                 await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
                 await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -221,10 +233,14 @@ namespace Services
                     EndDate = existingUserPayment.CreatedTime.AddMonths(subscription.MonthOfSubcription)
                 };
             }
-            catch (Exception exception)
+            catch (ErrorException)
+            {
+                throw;
+            }
+            catch (Exception ex)
             {
 
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, ex.Message);
 
             }
 
@@ -257,6 +273,10 @@ namespace Services
 
 
                 return responseList;
+            }
+            catch (ErrorException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
