@@ -6,6 +6,7 @@ using DTOs.PaymentDTOs;
 using MailKit.Search;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Net.payOS;
 using Net.payOS.Types;
 using Repositories.Interfaces;
@@ -90,18 +91,37 @@ namespace Services
         {
             try
             {
+                var userId = _tokenService.GetUserIdFromToken();
+
+                if (body.price <= 0 || string.IsNullOrEmpty(body.productName))
+                {
+                    throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Invalid payment details");
+                }
+
                 int orderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff"));
+
                 ItemData item = new ItemData(body.productName, 1, body.price);
                 List<ItemData> items = new List<ItemData>();
-                items.Add(item);
                 PaymentData paymentData = new PaymentData(orderCode, body.price, body.description, items, body.cancelUrl, body.returnUrl);
 
-
-
                 CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
-                var userId = _tokenService.GetUserIdFromToken();
+
+
+
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>()
+                    .FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "success", include: x => x.Include(up => up.Subcription));
+
+                if (existingUserPayment != null && existingUserPayment.CreatedTime.AddMonths(existingUserPayment.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
+                    var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId);
+                    {
+                        throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT,
+                            $"{userId} already has an active subscription: {existingUserPayment.Subcription.Name}");
+                    }
+
+                }
                 var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
-                                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subcription not found!");
+                                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subscription not found!");
+
                 var userPayment = new UserPayment()
                 {
                     Id = createPayment.orderCode.ToString(),
@@ -121,7 +141,7 @@ namespace Services
             }
             catch (Exception exception)
             {
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Create paymentlink error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Failed to create payment link");
 
             }
         }
@@ -167,6 +187,39 @@ namespace Services
                 await _unitOfWork.Repository<UserPayment>().UpdateAsync(existingUserPayment);
                 await _unitOfWork.SaveChangeAsync();
                 return paymentLinkInformation;
+            }
+            catch (Exception exception)
+            {
+
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+
+            }
+
+        }
+        public async Task<PaymentIsPaidResponse> GetCurrnetSubcription()
+        {
+            try
+            {
+                var userId = _tokenService.GetUserIdFromToken();
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "success")
+                ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
+
+                var subscription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId)
+                             ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subcription does not exist!");
+                if(existingUserPayment.CreatedTime.AddMonths(subscription.MonthOfSubcription) < DateTime.Now)
+                {
+                    throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, $"Subcription {subscription.Name} had expired!");
+
+                }
+                 return new PaymentIsPaidResponse
+                {
+                    Name = subscription.Name,
+                    Description = existingUserPayment.description,
+                    SmartDietUserId = existingUserPayment.SmartDietUserId,
+                    SubscriptionId = subscription.Id,
+                    StartDate = existingUserPayment.CreatedTime,
+                    EndDate = existingUserPayment.CreatedTime.AddMonths(subscription.MonthOfSubcription)
+                };
             }
             catch (Exception exception)
             {

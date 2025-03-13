@@ -47,6 +47,12 @@ namespace SmartDietAPI.Controllers
             var result = await _service.GetPaymentbyUserId(userId);
             return Ok(ApiResponse<object>.Success(result));
         }
+        [HttpGet("get-current-subscription")]
+        public async Task<IActionResult> GetCurrnetSubcription()
+        {
+            var result = await _service.GetCurrnetSubcription();
+            return Ok(ApiResponse<object>.Success(result));
+        }
         [HttpPut("cancel-order/{orderId}")]
         public async Task<IActionResult> CancelOrder([FromRoute] int orderId)
         {

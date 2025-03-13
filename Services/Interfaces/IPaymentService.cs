@@ -17,6 +17,7 @@ namespace Services.Interfaces
          Task<PaymentLinkInformation> CancelOrder(int orderId);
          Task ConfirmWebhook(ConfirmWebhookRequest body);
         Task<IEnumerable<PaymentIsPaidResponse>> GetPaymentbyUserId(string id);
+        Task<PaymentIsPaidResponse> GetCurrnetSubcription();
 
 
     }
