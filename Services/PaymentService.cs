@@ -109,13 +109,19 @@ namespace Services
 
 
                 var existingUserPayment = await _unitOfWork.Repository<UserPayment>()
-                    .FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid", include: x => x.Include(up => up.Subcription));
+                     .GetAllAsync(
+                         orderBy: q => q.OrderBy(x => x.CreatedTime),
+                         include: q => q.Include(up => up.Subcription) 
+                     );
 
-                if (existingUserPayment != null && existingUserPayment.CreatedTime.AddMonths(existingUserPayment.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
-                    var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId);
+                var existing = existingUserPayment
+                    .FirstOrDefault(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid");
+
+                if (existingUserPayment != null && existing.CreatedTime.AddMonths(existing.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
+                    var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existing.SubcriptionId);
                     {
                         throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT,
-                            $"{userId} already has an active subscription: {existingUserPayment.Subcription.Name}");
+                            $"{userId} already has an active subscription: {existing.Subcription.Name}");
                     }
 
                 }

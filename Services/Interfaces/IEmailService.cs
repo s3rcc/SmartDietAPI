@@ -8,6 +8,6 @@ namespace Services.Interfaces
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(string sendTo, string subject, string body);
+        Task SendEmailAsync(string sendTo, string subject, string body, string templateType);
     }
 }
