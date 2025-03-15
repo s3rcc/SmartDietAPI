@@ -67,8 +67,9 @@ namespace Services
                     );
 
                 var filteredMeals = allMeals.Where(m =>
-                    !recentMealIds.Contains(m.Id) &&
+                    //!recentMealIds.Contains(m.Id) &&
                     m.MealDishes.Any(md =>
+
                         md.Dish.DietType == userPreferences.PrimaryDietType
                         &&
                         (userPreferences.PrimaryRegionType.HasFlag(md.Dish.RegionType) ||
@@ -79,6 +80,7 @@ namespace Services
                         md.Dish.Difficulty <= userPreferences.MaxRecipeDifficulty
                         &&
                         !md.Dish.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
+
                     )).ToList();
 
                 var scoredMeals = filteredMeals.Select(m => new
@@ -151,11 +153,17 @@ namespace Services
             try
             {
                 var userId = _tokenService.GetUserIdFromToken();
+                var userPreferences = await _unitOfWork.Repository<UserPreference>()
+            .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
+            ?? throw new Exception("User preferences not found");
                 var recentRecommendations = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId &&
                         r.RecommendationDate > DateTime.UtcNow.AddDays(-_settings.DaysToExcludeRecentlyRecommended),
                         include: query => query.Include(x => x.Meal)
                         .ThenInclude(x => x.MealDishes)
+                        .ThenInclude(x => x.Dish)
+                        .OrderByDescending(r => r.RecommendationDate) // Order by newest first
+            .Take(userPreferences.DailyMealCount)
                         );
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recentRecommendations.Select(r => r.Meal));
@@ -177,10 +185,16 @@ namespace Services
             try
             {
                 var userId = _tokenService.GetUserIdFromToken();
+                var userPreferences = await _unitOfWork.Repository<UserPreference>()
+            .FirstOrDefaultAsync(up => up.SmartDietUserId == userId)
+            ?? throw new Exception("User preferences not found");
                 var recommendationHistory = await _unitOfWork.Repository<MealRecommendationHistory>()
                     .FindAsync(r => r.SmartDietUserId == userId,
                         include: query => query.Include(x => x.Meal)
-                        .ThenInclude(x => x.MealDishes));
+                        .ThenInclude(x => x.MealDishes)
+                        .ThenInclude(x => x.Dish)
+                        .OrderByDescending(r => r.RecommendationDate) // Order by newest first
+            .Take(userPreferences.DailyMealCount));
 
                 return _mapper.Map<IEnumerable<MealResponse>>(recommendationHistory.Select(r => r.Meal));
             }

@@ -11,7 +11,7 @@ namespace DTOs.UserPreferenceDTOs
     {
         // Dietary Preferences
         public DietType PrimaryDietType { get; set; }
-        public List<RegionType> RegionTypes { get; set; } = new List<RegionType>();
+        public List<RegionType> PrimaryRegionTypes { get; set; } = new List<RegionType>();
         public int DailyMealCount { get; set; }
         public int DishesPerMealCount { get; set; }
 

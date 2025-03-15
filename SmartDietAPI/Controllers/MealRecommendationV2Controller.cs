@@ -1,16 +1,15 @@
-﻿using BusinessObjects.Base;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 
 namespace SmartDietAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MealRecommendationController : Controller
+    public class MealRecommendationV2Controller : Controller
     {
-        private readonly IRecommendationService _recommendationService;
+        private readonly IMealRecommendationServiceV2 _recommendationService;
 
-        public MealRecommendationController(IRecommendationService recommendationService)
+        public MealRecommendationV2Controller(IMealRecommendationServiceV2 recommendationService)
         {
             _recommendationService = recommendationService;
         }
@@ -19,28 +18,28 @@ namespace SmartDietAPI.Controllers
         public async Task<IActionResult> GetRecommendations()
         {
             var recommendations = await _recommendationService.GetRecommendedMealsAsync();
-            return Ok(ApiResponse<object>.Success(recommendations));
+            return Ok(recommendations);
         }
 
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateRecommendations()
         {
             var recommendations = await _recommendationService.GenerateRecommendationsAsync();
-            return Ok(ApiResponse<object>.Success(null, "Generated successfully", 201));
+            return Ok(recommendations);
         }
 
         [HttpPost("regenerate")]
         public async Task<IActionResult> RegenerateRecommendations()
         {
             var recommendations = await _recommendationService.RegenerateRecommendationsAsync();
-            return Ok(ApiResponse<object>.Success(null, "Generated successfully", 201));
+            return Ok(recommendations);
         }
 
         [HttpGet("history")]
         public async Task<IActionResult> GetRecommendationHistory()
         {
             var history = await _recommendationService.GetRecommendationHistoryAsync();
-            return Ok(ApiResponse<object>.Success(history));
+            return Ok(history);
         }
     }
 }

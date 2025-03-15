@@ -92,7 +92,7 @@ namespace Services
                 userPreference.SmartDietUserId = userId;
                 userPreference.CreatedTime = DateTime.UtcNow;
                 userPreference.CreatedBy = userId;
-                userPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.RegionTypes);
+                userPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.PrimaryRegionTypes);
 
                 await _unitOfWork.Repository<UserPreference>().AddAsync(userPreference);
                 await _unitOfWork.SaveChangeAsync();
@@ -128,7 +128,7 @@ namespace Services
                 }
 
                 _mapper.Map(userPreferenceDto, existingPreference);
-                existingPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.RegionTypes);
+                existingPreference.PrimaryRegionType = CombineRegionTypes(userPreferenceDto.PrimaryRegionTypes);
                 existingPreference.LastUpdatedTime = DateTime.UtcNow;
                 existingPreference.LastUpdatedBy = userId;
 

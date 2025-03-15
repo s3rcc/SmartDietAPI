@@ -9,7 +9,6 @@ namespace DTOs.UserFeedbackDTOs
 {
     public class UserFeedbackDTO
     {
-        public string SmartDietUserId { get; set; }
 
         public int StarRating { get; set; }
 

@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace SmartDietAPI.Migrations
+namespace DataAccessObjects.Migrations
 {
     [DbContext(typeof(SmartDietDbContext))]
-    [Migration("20250301111950_AddDishRecommendHistoryTable")]
-    partial class AddDishRecommendHistoryTable
+    [Migration("20250311152527_update_payment")]
+    partial class update_payment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -751,6 +751,54 @@ namespace SmartDietAPI.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entity.Subcription", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<float>("Amount")
+                        .HasColumnType("real");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastUpdatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MonthOfSubcription")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SubscriptionStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SubscriptionType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Subcriptions");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entity.UserAllergy", b =>
                 {
                     b.Property<string>("Id")
@@ -883,6 +931,63 @@ namespace SmartDietAPI.Migrations
                     b.HasIndex("SmartDietUserId");
 
                     b.ToTable("UserMealInteractions");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entity.UserPayment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<float>("Amount")
+                        .HasColumnType("real");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastUpdatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SmartDietUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SubcriptionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SmartDietUserId");
+
+                    b.HasIndex("SubcriptionId");
+
+                    b.ToTable("UserPayments");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entity.UserPreference", b =>
@@ -1155,6 +1260,53 @@ namespace SmartDietAPI.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("UserDishInteraction", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DishId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("InteractionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InteractionType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastUpdatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SmartDietUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DishId");
+
+                    b.HasIndex("SmartDietUserId");
+
+                    b.ToTable("UserDishInteractions");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entity.DishIngredient", b =>
                 {
                     b.HasOne("BusinessObjects.Entity.Dish", "Dish")
@@ -1386,6 +1538,25 @@ namespace SmartDietAPI.Migrations
                     b.Navigation("SmartDietUser");
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entity.UserPayment", b =>
+                {
+                    b.HasOne("BusinessObjects.Entity.SmartDietUser", "SmartDietUser")
+                        .WithMany()
+                        .HasForeignKey("SmartDietUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessObjects.Entity.Subcription", "Subcription")
+                        .WithMany()
+                        .HasForeignKey("SubcriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SmartDietUser");
+
+                    b.Navigation("Subcription");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entity.UserPreference", b =>
                 {
                     b.HasOne("BusinessObjects.Entity.SmartDietUser", "SmartDietUser")
@@ -1472,6 +1643,25 @@ namespace SmartDietAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("UserDishInteraction", b =>
+                {
+                    b.HasOne("BusinessObjects.Entity.Dish", "Dish")
+                        .WithMany()
+                        .HasForeignKey("DishId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessObjects.Entity.SmartDietUser", "SmartDietUser")
+                        .WithMany()
+                        .HasForeignKey("SmartDietUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dish");
+
+                    b.Navigation("SmartDietUser");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entity.Dish", b =>

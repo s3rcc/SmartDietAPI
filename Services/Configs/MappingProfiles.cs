@@ -9,6 +9,7 @@ using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
 using DTOs.RoleDTOs;
+using DTOs.SubcriptionDTOs;
 using DTOs.UserAllergyDTOs;
 using DTOs.UserFeedbackDTOs;
 using DTOs.UserPreferenceDTOs;
@@ -74,7 +75,11 @@ namespace Services.Mappers
 
             CreateMap<DishIngredient, DishIngredientResponse>()
                 .ForMember(dest => dest.FoodName, opt => opt
-                .MapFrom(src => src.Food));
+                .MapFrom(src => src.Food.Name));
+
+            // Interation mapping
+            CreateMap<UserDishInteractionDTO, UserDishInteraction>();
+            CreateMap<UserDishInteraction, UserDishInteractionResponse>();
             #endregion dish
 
             #region meal
@@ -95,6 +100,8 @@ namespace Services.Mappers
                 .ForMember(dest => dest.Image, opt => opt
                 .MapFrom(src => src.Dish.Image));
 
+            CreateMap<UserMealInteractionDTO, UserMealInteraction>();
+            CreateMap<UserMealInteraction, UserMealInteractionResponse>();
             #endregion meal
 
             #region User
@@ -150,11 +157,7 @@ namespace Services.Mappers
             #endregion
 
             #region User Feedback Mappings
-            CreateMap<UserFeedback, UserFeedbackResponse>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.SmartDietUserId, opt => opt.MapFrom(src => src.SmartDietUserId))
-                .ForMember(dest => dest.StarRating, opt => opt.MapFrom(src => src.StarRating))
-                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment));
+            CreateMap<UserFeedback, UserFeedbackResponse>();
 
             CreateMap<UserFeedbackDTO, UserFeedback>();
             #endregion 
@@ -173,6 +176,13 @@ namespace Services.Mappers
                 .ForMember(dest => dest.FoodName, opt => opt.MapFrom(src => src.Food.Name));
             CreateMap<UserAllergyDTO, UserAllergy>();
             #endregion UserAllergy
+
+            #region Subcription
+            CreateMap<Subcription, SubcriptionResponse>()
+                .ForMember(dest => dest.SubscriptionType, opt => opt.MapFrom(src => src.SubscriptionType.ToString()));
+            CreateMap<SubcriptionResponse, SubcriptionRequest>();
+            CreateMap<SubcriptionRequest, Subcription>();
+            #endregion Subcription
         }
     }
 }

@@ -4,36 +4,40 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
+      - master
     
 env:
-    AZURE_WEBAPP_NAME: SmartDietAPI
-    AZURE_WEBAPP_PACKAGE_PATH: "./publish"
+  AZURE_WEBAPP_NAME: SmartDietAPI
+  AZURE_WEBAPP_PACKAGE_PATH: "./publish"
+  ASPNETCORE_ENVIRONMENT: "Production"
     
 jobs: 
-   publish:
-     runs-on: ubuntu-latest
+  publish:
+    runs-on: ubuntu-latest
 
-     steps: 
-        - uses: actions/checkout@v3
+    steps: 
+      - uses: actions/checkout@v3
 
-        - name: Setup .Net
-          uses: actions/setup-dotnet@v3
-          with:
-            dotnet-version: '8.0.x'
-            
-        - name: Restore
-          run: dotnet restore ./SmartDietAPI.sln
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: Restore dependencies
+        run: dotnet restore ./SmartDietAPI/SmartDietAPI.csproj  # Chỉ restore project chính
 
-        - name: Build
-          run: dotnet build ./SmartDietAPI.sln --configuration Release --no-restore
+      - name: Build project
+        run: dotnet build ./SmartDietAPI/SmartDietAPI.csproj --configuration Release --no-restore
 
-        - name: Publish
-          run: dotnet publish ./SmartDietAPI.sln --configuration Release --no-build --output '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}'
+      - name: Publish project
+        run: dotnet publish ./SmartDietAPI/SmartDietAPI.csproj --configuration Release --no-build --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
-        - name: Deployment
-          uses: azure/webapps-deploy@v2
-          with:
-              app-name: ${{ env.AZURE_WEBAPP_NAME }}
-              publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-              package: "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+      - name: Verify published files
+        run: ls -la ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}  # Kiểm tra file trong thư mục publish
+
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
