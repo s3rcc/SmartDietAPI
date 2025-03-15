@@ -75,7 +75,7 @@ namespace SmartDietAPI.Services
                      userPreferences.PrimaryRegionType.HasFlag(d.RegionType) ||
                      d.RegionType.HasFlag(userPreferences.PrimaryRegionType)) &&
                     d.CookingTimeMinutes <= userPreferences.MaxCookingTime &&
-                    d.Difficulty <= userPreferences.MaxRecipeDifficulty &&
+                    //d.Difficulty <= userPreferences.MaxRecipeDifficulty &&
                     !d.DishIngredients.Any(di => userAllergies.Any(ua => ua.FoodId == di.FoodId))
                 ).ToList();
 
@@ -181,7 +181,7 @@ namespace SmartDietAPI.Services
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log the exception and rethrow or handle it as needed
                 throw new ErrorException(StatusCodes.Status500InternalServerError,
@@ -206,7 +206,7 @@ namespace SmartDietAPI.Services
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception )
             {
                 // Log the exception and rethrow or handle it as needed
                 throw new ErrorException(StatusCodes.Status500InternalServerError,

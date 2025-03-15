@@ -33,7 +33,6 @@ namespace Services
         {
             try
             {
-
                 var userId = _tokenService.GetUserIdFromToken();
 
                 // Check if dish name already exists
@@ -42,7 +41,6 @@ namespace Services
                 {
                     throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Dish name already exists");
                 }
-
 
                 // Create map
                 var dish = _mapper.Map<Dish>(dishDTO);
@@ -56,7 +54,8 @@ namespace Services
                 // Set created time and user
                 dish.CreatedTime = DateTime.UtcNow;
                 dish.CreatedBy = userId;
-
+                dish.LastUpdatedTime = DateTime.UtcNow;
+                dish.LastUpdatedBy = userId;
                 // Save dish to the database
                 await _unitOfWork.Repository<Dish>().AddAsync(dish);
                 await _unitOfWork.SaveChangeAsync();
@@ -180,7 +179,8 @@ namespace Services
                     include: x => x.Include(x => x.DishIngredients)
                     .ThenInclude(x => x.Food),
                     searchTerm: x => string.IsNullOrEmpty(searchTerm) || x.Name.Contains(searchTerm),
-                    orderBy: x => x.OrderBy(d => d.Name));
+                    orderBy: x => x.OrderByDescending(d => d.LastUpdatedTime).ThenByDescending(d => d.CreatedTime)
+                );
 
                 if (dishes == null || !dishes.Items.Any())
                 {
@@ -226,7 +226,7 @@ namespace Services
             }
         }
 
-        public async Task UpdateDishAsync(string dishId, DishDTO dishDTO, List<DishIngredientDTO> dishIngredientDTOs)
+        public async Task UpdateDishAsync(string dishId, DishDTO dishDTO)
         {
             try
             {
@@ -245,29 +245,27 @@ namespace Services
                     throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Dish name already exists");
                 }
 
-                // Retrieve old image
-                var oldImgUrl = existingDish.Image;
-
-                // Map dish
-                _mapper.Map(dishDTO, existingDish);
-
-                // Process image
+                // Handle image
                 if (dishDTO.Image != null)
                 {
+                    // Upload new image
                     existingDish.Image = await _cloudinaryService.UploadImageAsync(dishDTO.Image);
-
-                    // Delete old image if it exists
-                    if (!string.IsNullOrEmpty(oldImgUrl))
-                    {
-                        var publicId = oldImgUrl.Split('/').Last().Split('.')[0];
-                        await _cloudinaryService.DeleteImageAsync(publicId);
-                    }
                 }
-                else
+                else if (!string.IsNullOrEmpty(dishDTO.ImageUrl))
                 {
-                    // Keep old image
-                    existingDish.Image = oldImgUrl;
+                    // Keep existing image URL
+                    existingDish.Image = dishDTO.ImageUrl;
                 }
+
+                // Map other properties
+                existingDish.Name = dishDTO.Name;
+                existingDish.Description = dishDTO.Description;
+                existingDish.Instruction = dishDTO.Instruction;
+                existingDish.PrepTimeMinutes = dishDTO.PrepTimeMinutes;
+                existingDish.CookingTimeMinutes = dishDTO.CookingTimeMinutes;
+                existingDish.RegionType = dishDTO.RegionType;
+                existingDish.DietType = dishDTO.DietType;
+                existingDish.Difficulty = dishDTO.Difficulty;
 
                 // Handle dish ingredients
                 // Remove existing dish ingredients
@@ -278,9 +276,9 @@ namespace Services
                 }
 
                 // Add new dish ingredients
-                if (dishIngredientDTOs != null && dishIngredientDTOs.Any())
+                if (dishDTO.DishIngredients != null && dishDTO.DishIngredients.Any())
                 {
-                    var newIngredients = dishIngredientDTOs.Select(
+                    var newIngredients = dishDTO.DishIngredients.Select(
                         ingredient => new DishIngredient
                         {
                             DishId = existingDish.Id,

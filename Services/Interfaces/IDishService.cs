@@ -14,7 +14,7 @@ namespace Services.Interfaces
         Task<DishResponse> GetDishByIdAsync(string dishId);
         Task<BasePaginatedList<DishResponse>> GetAllDishesAsync(int pageIndex, int pageSize, string? searchTerm);
         Task CreateDishAsync(DishDTO dishDTO, List<DishIngredientDTO> dishIngredientDTOs);
-        Task UpdateDishAsync(string dishId, DishDTO dishDTO, List<DishIngredientDTO> dishIngredientDTOs);
+        Task UpdateDishAsync(string dishId, DishDTO dishDTO);
         Task DeleteDishAsync(string dishId);
     }
 }

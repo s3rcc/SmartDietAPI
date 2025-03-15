@@ -54,6 +54,8 @@ namespace Services
                 // Set create time and user
                 food.CreatedTime = DateTime.UtcNow;
                 food.CreatedBy = userId;
+                food.LastUpdatedTime = DateTime.UtcNow;
+                food.LastUpdatedBy = userId;
 
                 await _unitOfWork.Repository<Food>().AddAsync(food);
                 await _unitOfWork.SaveChangeAsync();
@@ -157,7 +159,7 @@ namespace Services
                         x => x.NutrientCategories
                     ],
                     searchTerm: x => string.IsNullOrEmpty(searchTerm) || x.Name.Contains(searchTerm),
-                    orderBy: x => x.OrderBy(f => f.Name)
+                    orderBy: x => x.OrderByDescending(f => f.LastUpdatedTime).ThenByDescending(f => f.CreatedTime)
                 );
 
                 if (foods == null || !foods.Items.Any())
