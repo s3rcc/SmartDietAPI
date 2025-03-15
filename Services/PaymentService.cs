@@ -113,11 +113,14 @@ namespace Services
                          orderBy: q => q.OrderBy(x => x.CreatedTime),
                          include: q => q.Include(up => up.Subcription) 
                      );
+                var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
+                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subscription not found!");
 
                 var existing = existingUserPayment
                     .FirstOrDefault(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid");
 
-                if (existingUserPayment != null && existing.CreatedTime.AddMonths(existing.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
+                if (existingUserPayment != null && 
+                    existing?.CreatedTime.AddMonths(existing.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
                     var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existing.SubcriptionId);
                     {
                         throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT,
@@ -125,8 +128,7 @@ namespace Services
                     }
 
                 }
-                var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
-                                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subscription not found!");
+
 
                 var userPayment = new UserPayment()
                 {
