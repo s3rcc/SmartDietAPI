@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Base;
 using DTOs.FavoriteMealDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 
@@ -15,7 +16,7 @@ namespace SmartDietAPI.Controllers
         {
             _favoriteMealService = favoriteMealService;
         }
-
+        [Authorize]
         [HttpGet("all")]
         public async Task<IActionResult> GetFavoriteMeals(
             [FromQuery] int pageIndex = 1, 
@@ -25,28 +26,28 @@ namespace SmartDietAPI.Controllers
             var result = await _favoriteMealService.GetAllFavoriteMealsAsync(pageIndex, pageSize, searchTerm);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFavoriteMealById(string id)
         {
             var result = await _favoriteMealService.GetFavoriteMealByIdAsync(id);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> AddFavoriteMeal(FavoriteMealDTO favoriteMealDTO)
         {
             await _favoriteMealService.CreateFavoriteMealAsync(favoriteMealDTO);
             return Ok(ApiResponse<object>.Success(null, "Favorite meal added successfully", 201));
         }
-
+        [Authorize]
         [HttpPut("{favoriteMealId}")]
         public async Task<IActionResult> UpdateFavoriteMeal(string favoriteMealId, FavoriteMealDTO favoriteMealDTO)
         {
             await _favoriteMealService.UpdateFavoriteMealAsync(favoriteMealId, favoriteMealDTO);
             return Ok(ApiResponse<object>.Success(null, "Favorite meal updated successfully"));
         }
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFavoriteMeal(string id)
         {
