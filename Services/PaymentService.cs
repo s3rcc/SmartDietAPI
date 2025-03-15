@@ -240,7 +240,7 @@ namespace Services
             catch (Exception exception)
             {
 
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get Payment Error");
 
             }
 
@@ -277,7 +277,7 @@ namespace Services
             catch (Exception exception)
             {
 
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get Payment Error");
 
             }
 
