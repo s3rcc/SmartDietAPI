@@ -109,18 +109,26 @@ namespace Services
 
 
                 var existingUserPayment = await _unitOfWork.Repository<UserPayment>()
-                    .FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid", include: x => x.Include(up => up.Subcription));
+                     .GetAllAsync(
+                         orderBy: q => q.OrderBy(x => x.CreatedTime),
+                         include: q => q.Include(up => up.Subcription) 
+                     );
+                var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
+                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subscription not found!");
 
-                if (existingUserPayment != null && existingUserPayment.CreatedTime.AddMonths(existingUserPayment.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
-                    var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId);
+                var existing = existingUserPayment
+                    .FirstOrDefault(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid");
+
+                if (existingUserPayment != null && 
+                    existing?.CreatedTime.AddMonths(existing.Subcription.MonthOfSubcription) > DateTime.UtcNow) {
+                    var subcriptionIsPard = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existing.SubcriptionId);
                     {
                         throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.CONFLICT,
-                            $"{userId} already has an active subscription: {existingUserPayment.Subcription.Name}");
+                            $"{userId} already has an active subscription: {existing.Subcription.Name}");
                     }
 
                 }
-                var subcription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(body.subcriptionId)
-                                     ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subscription not found!");
+
 
                 var userPayment = new UserPayment()
                 {
@@ -201,12 +209,20 @@ namespace Services
             try
             {
                 var userId = _tokenService.GetUserIdFromToken();
-                var existingUserPayment = await _unitOfWork.Repository<UserPayment>().FirstOrDefaultAsync(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid")
+
+                var existingUserPayment = await _unitOfWork.Repository<UserPayment>()
+                             .GetAllAsync(
+                                 orderBy: q => q.OrderBy(x => x.CreatedTime),
+                                 include: q => q.Include(up => up.Subcription)
+                             );
+
+                var existing = existingUserPayment
+                    .FirstOrDefault(x => x.SmartDietUserId == userId && x.PaymentStatus.ToLower() == "paid")
                 ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "UserPayment does not exist!");
 
-                var subscription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existingUserPayment.SubcriptionId)
+                var subscription = await _unitOfWork.Repository<Subcription>().GetByIdAsync(existing.SubcriptionId)
                              ?? throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Subcription does not exist!");
-                if(existingUserPayment.CreatedTime.AddMonths(subscription.MonthOfSubcription) < DateTime.Now)
+                if(existing.CreatedTime.AddMonths(subscription.MonthOfSubcription) < DateTime.Now)
                 {
                     throw new ErrorException(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, $"Subcription {subscription.Name} had expired!");
 
@@ -214,17 +230,17 @@ namespace Services
                  return new PaymentIsPaidResponse
                 {
                     Name = subscription.Name,
-                    Description = existingUserPayment.description,
-                    SmartDietUserId = existingUserPayment.SmartDietUserId,
+                    Description = existing.description,
+                    SmartDietUserId = existing.SmartDietUserId,
                     SubscriptionId = subscription.Id,
-                    StartDate = existingUserPayment.CreatedTime,
-                    EndDate = existingUserPayment.CreatedTime.AddMonths(subscription.MonthOfSubcription)
+                    StartDate = existing.CreatedTime,
+                    EndDate = existing.CreatedTime.AddMonths(subscription.MonthOfSubcription)
                 };
             }
             catch (Exception exception)
             {
 
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get Payment Error");
 
             }
 
@@ -261,7 +277,7 @@ namespace Services
             catch (Exception exception)
             {
 
-                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Cancel order error");
+                throw new ErrorException(StatusCodes.Status400BadRequest, ErrorCode.BADREQUEST, "Get Payment Error");
 
             }
 

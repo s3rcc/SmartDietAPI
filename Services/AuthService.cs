@@ -231,7 +231,7 @@ namespace Services
                 string OTP = GenerateOTP();
                 string cacheKey = $"OTP_{request.Email}";
                 _memoryCache.Set(cacheKey, OTP, TimeSpan.FromMinutes(10));
-                await _emailService.SendEmailAsync(request.Email, "Confirm User", OTP);
+                await _emailService.SendEmailAsync(request.Email, "Verify Your Account", OTP, "AccountVerification");
             }
             else
             {
@@ -280,7 +280,7 @@ namespace Services
                 throw new ErrorException(500, ErrorCode.BADREQUEST, "OTP have been sent");
             }
             _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(10));
-            await _emailService.SendEmailAsync(request.Email, "Confirm User", otp);
+            await _emailService.SendEmailAsync(request.Email, "Verify Your Account", otp, "AccountVerification");
         }
         public async Task ChangePassword(ChangePasswordRequest request)
         {
@@ -346,8 +346,8 @@ namespace Services
             }
             string OTP = GenerateOTP();
             string cacheKey = $"OTPResetPassword_{user.Email}";
-            _memoryCache.Set(cacheKey, OTP, TimeSpan.FromMinutes(1));
-            await _emailService.SendEmailAsync(user.Email, "Confirm User", OTP);
+            _memoryCache.Set(cacheKey, OTP, TimeSpan.FromMinutes(10));
+            await _emailService.SendEmailAsync(user.Email, "Reset Your Password", OTP, "ResetPassword");
 
         }
         public async Task<AuthResponse> LoginGoogle(TokenGoogleRequest request)

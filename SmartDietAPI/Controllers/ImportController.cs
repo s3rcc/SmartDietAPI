@@ -4,6 +4,7 @@ using BusinessObjects.Base;
 using BusinessObjects.Entity;
 using DTOs.ExcelDTOs;
 using OfficeOpenXml;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartDietAPI.Controllers
 {
@@ -31,7 +32,7 @@ namespace SmartDietAPI.Controllers
             _fileHandlerService = fileHandlerService;
             _env = env;
         }
-
+        [Authorize]
         [HttpPost("meals")]
         public async Task<IActionResult> ImportMeals(IFormFile file)
         {
@@ -59,7 +60,7 @@ namespace SmartDietAPI.Controllers
                 ));
             }
         }
-
+        [Authorize]
         [HttpPost("foods")]
         public async Task<IActionResult> ImportFoods(IFormFile file)
         {
@@ -87,7 +88,7 @@ namespace SmartDietAPI.Controllers
                 ));
             }
         }
-
+        [Authorize]
         [HttpPost("dishes")]
         public async Task<IActionResult> ImportDishs(IFormFile file)
         {
@@ -115,7 +116,7 @@ namespace SmartDietAPI.Controllers
                 ));
             }
         }
-
+        [Authorize]
         [HttpGet("template/{fileName}")]
         public IActionResult GetImportTemplate(string fileName)
         {
