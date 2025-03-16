@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Base;
 using DTOs.UserProfileDTos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace SmartDietAPI.Controllers
             _userProfileService = userProfileService;
         }
 
-
+        [Authorize]
         // Get user profile by ID
         [HttpGet()]
         public async Task<IActionResult> GetUserProfile()
@@ -26,7 +27,7 @@ namespace SmartDietAPI.Controllers
             var result = await _userProfileService.GetUserProfileAsync();
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         // Create a new user profile
         [HttpPost("create")]
         public async Task<IActionResult> CreateUserProfile( UserProfileDTO userProfileDTO)
@@ -34,7 +35,7 @@ namespace SmartDietAPI.Controllers
             await _userProfileService.CreateUserProfileAsync(userProfileDTO);
             return Ok(ApiResponse<object>.Success(null, "User profile created successfully", 201));
         }
-
+        [Authorize]
         // Update an existing user profile
         [HttpPut()]
         public async Task<IActionResult> UpdateUserProfile(UserProfileDTO userProfileDTO)
