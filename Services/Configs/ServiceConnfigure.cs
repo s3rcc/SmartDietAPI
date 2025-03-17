@@ -49,6 +49,7 @@ namespace Services
             services.AddScoped<IFoodService, FoodService>();
             services.AddScoped<IDishService, DishService>();
             services.AddScoped<IMealService, MealService>();
+            services.AddScoped<IMealDishService, MealDishService>();
 
             services.AddScoped<IFavoriteMealService, FavoriteMealService>();
             services.AddScoped<IFavoriteDishService, FavoriteDishService>();

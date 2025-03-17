@@ -180,10 +180,10 @@ namespace SmartDietAPI
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartDiet API v1");
                 // Serve Swagger UI at root in Production
-                if (!app.Environment.IsProduction())
-                {
-                    options.RoutePrefix = string.Empty;
-                }
+                //if (!app.Environment.IsProduction())
+                //{
+                //    options.RoutePrefix = string.Empty;
+                //}
             });
             //app.UseCors("AllowAllOrigins");
           app.UseCors("AllowAll");
@@ -202,7 +202,3 @@ namespace SmartDietAPI
         }
     }
 }
-
-
-
-//Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIzZGI0OGQ1MC02YjE4LTQ0MDItODM4MC03ZWQ2YTJiMWIzNGEiLCJlbWFpbCI6ImhhaGFAaGFoYS5jb20iLCJyb2xlIjoiTWVtYmVyIiwibmJmIjoxNzQwODIxNTYzLCJleHAiOjE3NDE0MjYzNjIsImlhdCI6MTc0MDgyMTU2MywiaXNzIjoiQmFja0VuZCIsImF1ZCI6IkJhY2tFbmQifQ.jSwDOyEmRgNxl5IkyJi7FkdJMFFQm5PqAPwycggJdTk

@@ -153,9 +153,7 @@ namespace Services
         {
             try
             {
-                var dishes = await _unitOfWork.Repository<Dish>().GetAllAsync(
-                    include: x => x.Include(x => x.DishIngredients)
-                    .ThenInclude(x => x.Food));
+                var dishes = await _unitOfWork.Repository<Dish>().GetAllAsync();
 
                 return _mapper.Map<IEnumerable<DishResponse>>(dishes);
             }
