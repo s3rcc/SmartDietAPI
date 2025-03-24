@@ -35,23 +35,23 @@ namespace SmartDietAPI.Controllers
         [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> AddMeal([FromForm] MealDTO mealDTO
-            //, [FromForm] string? dishIds
+            , [FromForm] string? dishIds
             )
         {
-            //var dishIdsList = JsonConvert.DeserializeObject<List<string>>(dishIds);
-            //mealDTO.DishIds = dishIdsList;
+            var dishIdsList = JsonConvert.DeserializeObject<List<string>>(dishIds);
+            mealDTO.DishIds = dishIdsList;
             await _mealService.CreateMealAsync(mealDTO);
             return Ok(ApiResponse<object>.Success(null, "Meal created successfully", 201));
         }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMeal(string id, [FromForm] MealDTO mealDTO
-            //, [FromForm] string? dishIds
+            , [FromForm] string? dishIds
             )
         {
-            //// Deserialize DishIds từ JSON string
-            //var dishIdsList = JsonConvert.DeserializeObject<List<string>>(dishIds);
-            //mealDTO.DishIds = dishIdsList;
+            // Deserialize DishIds từ JSON string
+            var dishIdsList = JsonConvert.DeserializeObject<List<string>>(dishIds);
+            mealDTO.DishIds = dishIdsList;
             await _mealService.UpdateMealAsync(id, mealDTO);
             return Ok(ApiResponse<object>.Success(null, "Meal updated successfully"));
         }
