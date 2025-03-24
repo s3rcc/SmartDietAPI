@@ -6,6 +6,10 @@ using Repositories.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System.Net.Http;
+using System.IO;
+using Services.Interfaces;
 
 namespace Services
 {
@@ -19,10 +23,11 @@ namespace Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private const int RequiredColumnIndex = 1; // Column A
-
-        public ExcelImportService(IUnitOfWork unitOfWork)
+        private readonly ICloudinaryService _cloudinaryService;
+        public ExcelImportService(IUnitOfWork unitOfWork, ICloudinaryService cloudinaryService)
         {
             _unitOfWork = unitOfWork;
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<ExcelImportResult<T>> ImportFromExcel<TDto>(string filePath) where TDto : class
@@ -70,7 +75,7 @@ namespace Services
                             throw new ValidationException($"<<< Required column {RequiredColumnIndex} is empty >>>");
                         }
 
-                        var dto = MapExcelRowToDto<TDto>(worksheet, row);
+                        var dto = await MapExcelRowToDto<TDto>(worksheet, row);
                         ValidateDto(dto);
 
                         var entity = MapDtoToEntity(dto);
@@ -105,8 +110,13 @@ namespace Services
             return result;
         }
 
-        private TDto MapExcelRowToDto<TDto>(ExcelWorksheet worksheet, int row)
+        private async Task<TDto> MapExcelRowToDto<TDto>(ExcelWorksheet worksheet, int row) where TDto : class
         {
+            if (_cloudinaryService == null)
+            {
+                throw new ArgumentNullException(nameof(_cloudinaryService), "CloudinaryService is not initialized.");
+            }
+
             var dto = Activator.CreateInstance<TDto>();
             var properties = typeof(TDto).GetProperties();
 
@@ -115,8 +125,76 @@ namespace Services
                 var columnAttr = prop.GetCustomAttribute<ColumnAttribute>();
                 if (columnAttr != null)
                 {
-                    var value = worksheet.Cells[row, columnAttr.Index].Value?.ToString();
-                    prop.SetValue(dto, value);
+                    var cell = worksheet.Cells[row, columnAttr.Index];
+                    var value = cell.Value?.ToString();
+
+                    // Xử lý đặc biệt cho cột Image
+                    if (prop.Name == "Image" && !string.IsNullOrEmpty(value))
+                    {
+                        string imageUrl;
+                        
+                        // Lấy URL từ hyperlink nếu có, ngược lại sử dụng giá trị cell
+                        if (cell.Hyperlink != null)
+                        {
+                            imageUrl = cell.Hyperlink.AbsoluteUri;
+                        }
+                        else
+                        {
+                            imageUrl = value;
+                        }
+                        
+                        try
+                        {
+                            // Kiểm tra xem URL có phải từ Google Drive không
+                            if (imageUrl.Contains("drive.google.com"))
+                            {
+                                Console.WriteLine($"Detected Google Drive URL: {imageUrl}");
+                                value = await _cloudinaryService.UploadImageFromGoogleDriveAsync(imageUrl);
+                            }
+                            else
+                            {
+                                value = await _cloudinaryService.UploadImageFromUrlAsync(imageUrl);
+                            }
+                            Console.WriteLine($"Uploaded image successfully: {value}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to upload image: {ex.Message}");
+                            // Không throw exception ở đây - để cell tiếp tục xử lý
+                            // Có thể đặt một giá trị mặc định cho image
+                            value = "https://res.cloudinary.com/dtsjztbus/image/upload/default_image.jpg";
+                        }
+                    }
+
+                    // Xử lý giá trị trống cho StorageGuidelines
+                    if (prop.Name == "StorageGuidelines" && string.IsNullOrWhiteSpace(value))
+                    {
+                        value = "Hiện tại không có hướng dẫn bảo quản";
+                    }
+
+                    if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+                    {
+                        if (int.TryParse(value, out int intValue))
+                            prop.SetValue(dto, intValue);
+                        else if (prop.PropertyType == typeof(int?))
+                            prop.SetValue(dto, null);
+                    }
+                    else if (prop.PropertyType == typeof(decimal) || prop.PropertyType == typeof(decimal?))
+                    {
+                        if (decimal.TryParse(value, out decimal decimalValue))
+                            prop.SetValue(dto, decimalValue);
+                        else if (prop.PropertyType == typeof(decimal?))
+                            prop.SetValue(dto, null);
+                    }
+                    else if (prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?))
+                    {
+                        if (DateTime.TryParse(value, out DateTime dateValue))
+                            prop.SetValue(dto, dateValue);
+                    }
+                    else
+                    {
+                        prop.SetValue(dto, value);
+                    }
                 }
             }
             return dto;
@@ -140,15 +218,79 @@ namespace Services
                 if (entityProp != null && entityProp.CanWrite)
                 {
                     var value = dtoProp.GetValue(dto);
-                    entityProp.SetValue(entity, value);
+                    
+                    // Xử lý đặc biệt cho RegionType - xử lý bitwise cho flags enum
+                    if (entityProp.Name == "RegionType" && value is string regionTypeStr)
+                    {
+                        // Nếu giá trị là "0", đặt RegionType là None
+                        if (regionTypeStr.Trim() == "0")
+                        {
+                            entityProp.SetValue(entity, BusinessObjects.FixedData.RegionType.None);
+                            continue;
+                        }
+
+                        // Xử lý nhiều giá trị được phân tách bằng dấu phẩy hoặc khoảng trắng
+                        string[] values = regionTypeStr.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        int result = 0;
+
+                        foreach (var val in values)
+                        {
+                            if (int.TryParse(val.Trim(), out int flagValue))
+                            {
+                                result |= flagValue;
+                            }
+                        }
+
+                        entityProp.SetValue(entity, (BusinessObjects.FixedData.RegionType)result);
+                        continue;
+                    }
+                    // Xử lý enum nullable
+                    else if (IsNullableEnum(entityProp.PropertyType) && value is string nullableEnumString)
+                    {
+                        Type underlyingType = Nullable.GetUnderlyingType(entityProp.PropertyType);
+                        
+                        if (string.IsNullOrWhiteSpace(nullableEnumString))
+                        {
+                            entityProp.SetValue(entity, null);
+                        }
+                        else if (Enum.TryParse(underlyingType, nullableEnumString, true, out object nullableEnumValue))
+                        {
+                            entityProp.SetValue(entity, nullableEnumValue);
+                        }
+                        else
+                        {
+                            throw new ValidationException($"Giá trị '{nullableEnumString}' không hợp lệ cho {entityProp.Name}");
+                        }
+                    }
+                    // Xử lý enum thường
+                    else if (entityProp.PropertyType.IsEnum && value is string enumString)
+                    {
+                        if (Enum.TryParse(entityProp.PropertyType, enumString, true, out object enumValue))
+                        {
+                            entityProp.SetValue(entity, enumValue);
+                        }
+                        else
+                        {
+                            throw new ValidationException($"Giá trị '{enumString}' không hợp lệ cho {entityProp.Name}");
+                        }
+                    }
+                    // Xử lý các kiểu dữ liệu khác
+                    else
+                    {
+                        entityProp.SetValue(entity, value);
+                    }
                 }
             }
 
-            // Set BaseEntity defaults
             entity.CreatedTime = DateTime.UtcNow;
             entity.CreatedBy = "ExcelSystemImport";
-
             return entity;
+        }
+
+        private bool IsNullableEnum(Type type)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+            return underlyingType != null && underlyingType.IsEnum;
         }
 
         private async Task<bool> IsDuplicate(T entity)
@@ -174,6 +316,52 @@ namespace Services
         {
             return string.Join(", ", worksheet.Cells[row, 1, row, worksheet.Dimension.End.Column]
                 .Select(c => c.Value?.ToString()));
+        }
+
+        private async Task<Stream> DownloadImageFromGoogleDriveAsync(string url)
+        {
+            try
+            {
+                // Log bắt đầu tải ảnh
+                Console.WriteLine($"Bắt đầu tải ảnh từ URL: {url}");
+
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync(url);
+
+                // Log kết quả response
+                Console.WriteLine($"Response status code: {response.StatusCode}");
+
+                // Đảm bảo response thành công
+                response.EnsureSuccessStatusCode();
+
+                // Log thành công
+                Console.WriteLine("Tải ảnh thành công.");
+
+                return await response.Content.ReadAsStreamAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log lỗi HTTP
+                Console.WriteLine($"Lỗi HTTP khi tải ảnh: {ex.Message}");
+                throw new Exception($"Không thể tải ảnh từ URL: {url}", ex);
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi tổng quát
+                Console.WriteLine($"Lỗi khi tải ảnh: {ex.Message}");
+                throw new Exception($"Lỗi không xác định khi tải ảnh từ URL: {url}", ex);
+            }
+        }
+
+        public async Task<string> UploadImageFromStreamAsync(Stream imageStream, string fileName)
+        {
+            if (imageStream == null || imageStream.Length == 0)
+            {
+                throw new ArgumentException("Image stream cannot be null or empty");
+            }
+
+            var formFile = new FormFile(imageStream, 0, imageStream.Length, "image", fileName);
+            return await _cloudinaryService.UploadImageAsync(formFile);
         }
     }
 }
