@@ -190,7 +190,7 @@ namespace Services
                 var dishResponses = _mapper.Map<List<DishResponse>>(dishes.Items);
                 return new BasePaginatedList<DishResponse>(
                     dishResponses,
-                    dishResponses.Count,
+                    dishes.TotalItems,
                     pageIndex,
                     pageSize);
             }

@@ -141,7 +141,7 @@ namespace Services
 
                 return new BasePaginatedList<FavoriteMealResponse>(
                     favoriteMealResponses.ToList(),
-                    favoriteMealResponses.Count(),
+                    favoriteMeals.TotalItems,
                     pageIndex,
                     pageSize);
             }
