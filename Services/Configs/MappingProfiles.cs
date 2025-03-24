@@ -8,6 +8,7 @@ using DTOs.FavoriteMealDTOs;
 using DTOs.FoodDTOs;
 using DTOs.FridgeDTOs;
 using DTOs.MealDTOs;
+using DTOs.MealDishDTOs;
 using DTOs.RoleDTOs;
 using DTOs.SubcriptionDTOs;
 using DTOs.UserAllergyDTOs;
@@ -92,7 +93,7 @@ namespace Services.Mappers
                 .ForMember(dest => dest.Image, opt => opt
                 .MapFrom(src => src.Image));
 
-            CreateMap<MealDish, MealDishResponse>()
+            CreateMap<MealDish, DTOs.MealDTOs.MealDishResponse>()
                 .ForMember(dest => dest.Id, opt => opt
                 .MapFrom(src => src.DishId))
                 .ForMember(dest => dest.Name, opt => opt
@@ -183,6 +184,9 @@ namespace Services.Mappers
             CreateMap<SubcriptionResponse, SubcriptionRequest>();
             CreateMap<SubcriptionRequest, Subcription>();
             #endregion Subcription
+
+            CreateMap<MealDishDTO, MealDish>();
+            CreateMap<MealDish, DTOs.MealDishDTOs.MealDishResponse>();
         }
     }
 }

@@ -13,7 +13,6 @@ namespace BusinessObjects.Entity
         public Meal Meal { get; set; }
         public string DishId { get; set; }
         public Dish Dish { get; set; }
-
         public int? ServingSize;
     }
 }
