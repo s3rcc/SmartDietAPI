@@ -2,6 +2,7 @@
 using DataAccessObjects.Migrations;
 using DTOs.AuthDTOs;
 using DTOs.PaymentDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -20,13 +21,14 @@ namespace SmartDietAPI.Controllers
         {
             _service = service;
         }
+        [Authorize]
         [HttpPost("/create-payment-link")]
         public async Task<IActionResult> Checkout(List<CheckOutRequest> input)
         {
             CreatePaymentResult result = await _service.Checkout(input);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpPost("create")]
 
         public async Task<IActionResult> CreatePaymentLink(CreatePaymentLinkRequest body)
@@ -35,30 +37,35 @@ namespace SmartDietAPI.Controllers
             return Ok(ApiResponse<object>.Success(result));
 
         }
+        [Authorize]
         [HttpGet("get-order/{orderId}")]
         public async Task<IActionResult> GetOrder([FromRoute] int orderId)
         {
             PaymentLinkInformation result =  await _service.GetOrder(orderId);
             return Ok(ApiResponse<object>.Success(result));
         }
+        [Authorize]
         [HttpGet("get-order-by/{userId}")]
         public async Task<IActionResult> GetPaymentbyUserId([FromRoute] string userId)
         {
             var result = await _service.GetPaymentbyUserId(userId);
             return Ok(ApiResponse<object>.Success(result));
         }
+        [Authorize]
         [HttpGet("get-current-subscription")]
         public async Task<IActionResult> GetCurrnetSubcription()
         {
             var result = await _service.GetCurrnetSubcription();
             return Ok(ApiResponse<object>.Success(result));
         }
+        [Authorize]
         [HttpPut("cancel-order/{orderId}")]
         public async Task<IActionResult> CancelOrder([FromRoute] int orderId)
         {
             PaymentLinkInformation result =  await _service.CancelOrder(orderId);
             return Ok(ApiResponse<object>.Success(result));
         }
+        [Authorize]
         [HttpPost("payos_transfer_handler")]
         public IActionResult PayOSTransferHandler(WebhookType body)
         {
@@ -73,6 +80,7 @@ namespace SmartDietAPI.Controllers
 
             }
         }
+        [Authorize]
         [HttpPost("confirm-webhook")]
         public async Task<IActionResult> ConfirmWebhook(ConfirmWebhookRequest body)
         {

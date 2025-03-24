@@ -87,7 +87,7 @@ namespace Services
                 var response = _mapper.Map<List<FavoriteDishResponse>>(favoriteDishes.Items);
                 return new BasePaginatedList<FavoriteDishResponse>(
                     response,
-                    response.Count,
+                    favoriteDishes.TotalItems,
                     pageIndex,
                     pageSize);
             }
