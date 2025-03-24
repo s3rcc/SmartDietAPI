@@ -155,7 +155,7 @@ namespace Services
                 var responses = _mapper.Map<List<UserProfileResponse>>(userProfile.Items);
                 return new BasePaginatedList<UserProfileResponse>(
                     responses,
-                    responses.Count,
+                    userProfile.TotalItems,
                     pageIndex,
                     pageSize);
             }
