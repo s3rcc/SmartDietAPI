@@ -10,6 +10,11 @@ namespace BusinessObjects.FixedData
     public enum RegionType
     {
         None = 0,
+        NViet = 1,
+        TViet = 2,
+        BViet = 4
+
+
         #region Old
         //American,
         //Italian,
@@ -28,8 +33,6 @@ namespace BusinessObjects.FixedData
         //Brazilian,
         #endregion
 
-        NViet = 1,
-        TViet = 2,
-        BViet = 4
+
     }
 }

@@ -83,9 +83,9 @@ namespace SmartDietAPI
             //------------------CORS---------
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAllOrigins", policy =>
+                options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+                    policy.AllowAnyOrigin()
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -145,22 +145,6 @@ namespace SmartDietAPI
                 options.Cookie.IsEssential = true; // Cookie cần thiết cho ứng dụng
             });
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins", builder =>
-                {
-                    builder
-                        //.WithOrigins("exp://192.168.2.8:8082",
-                        //"http://localhost:19006",
-                        //"http://172.168.3.160:19006",
-                        //"http://localhost:8082")
-                        .AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                        //.AllowCredentials();
-                });
-            });
-
             //---------------------------------------------------------------
             var app = builder.Build();
             //seed
@@ -189,6 +173,9 @@ namespace SmartDietAPI
 
             app.UseSwagger();
 
+
+            
+
             app.UseSwaggerUI(options =>
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartDiet API v1");
@@ -198,7 +185,9 @@ namespace SmartDietAPI
                 //    options.RoutePrefix = string.Empty;
                 //}
             });
-            app.UseCors("AllowAllOrigins");
+            //app.UseCors("AllowAllOrigins");
+          app.UseCors("AllowAll");
+
 
 
 

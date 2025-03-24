@@ -20,6 +20,7 @@ namespace DTOs.DishDTOs
         public int CookingTimeMinutes { get; set; }
         public RegionType RegionType { get; set; }
         public DietType? DietType { get; set; }
+        public DifficultyLevel Difficulty { get; set; }
         public ICollection<DishIngredientResponse> DishIngredients { get; set; } = new List<DishIngredientResponse>();
         public DateTime CreatedTime { get; set; }
 

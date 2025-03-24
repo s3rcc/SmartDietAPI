@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.Interfaces;
+using Newtonsoft.Json;
 
 namespace SmartDietAPI.Controllers
 {
@@ -32,16 +33,17 @@ namespace SmartDietAPI.Controllers
         }
         [Authorize]
         [HttpPost("create")]
-        public async Task<IActionResult> AddDish(DishDTO dishDTO, List<DishIngredientDTO> dishIngredientDTOs)
+        public async Task<IActionResult> AddDish([FromForm] DishDTO dishDTO, [FromForm] string? dishIngredients)
         {
-            await _dishService.CreateDishAsync(dishDTO, dishIngredientDTOs);
+            var ingredients = JsonConvert.DeserializeObject<List<DishIngredientDTO>>(dishIngredients);
+            await _dishService.CreateDishAsync(dishDTO, ingredients);
             return Ok(ApiResponse<object>.Success(null, "Dish created successfully", 201));
         }
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDish(string id, DishDTO dishDTO, List<DishIngredientDTO> dishIngredientDTOs)
+        public async Task<IActionResult> UpdateDish(string id, [FromForm] DishDTO dishDTO)
         {
-            await _dishService.UpdateDishAsync(id, dishDTO, dishIngredientDTOs);
+            await _dishService.UpdateDishAsync(id, dishDTO);
             return Ok(ApiResponse<object>.Success(null, "Dish updated successfully"));
         }
         [Authorize]
