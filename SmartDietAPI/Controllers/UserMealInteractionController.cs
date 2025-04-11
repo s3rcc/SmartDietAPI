@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Base;
 using DTOs.MealDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 
@@ -15,49 +16,49 @@ namespace SmartDietAPI.Controllers
         {
             _service = service;
         }
-
+        [Authorize]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAllUserMealInteractionsAsync();
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpGet("meal/{mealId}")]
         public async Task<IActionResult> GetByMealId(string mealId)
         {
             var result = await _service.GetUserMealInteractionByMealIdAsync(mealId);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _service.GetUserMealInteractionByIdAsync(id);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> Create(UserMealInteractionDTO dto)
         {
             await _service.CreateUserMealInteractionAsync(dto);
             return Ok(ApiResponse<object>.Success(null, "Created successfully", 201));
         }
-
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateInteraction(UserMealInteractionDTO dto)
         {
             var result = await _service.CreateMealInteractionAsync(dto);
             return Ok(ApiResponse<object>.Success(result, "Created successfully", 201));
         }
-
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, UserMealInteractionDTO dto)
         {
             await _service.UpdateUserMealInteractionAsync(id, dto);
             return Ok(ApiResponse<object>.Success(null, "Updated successfully"));
         }
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

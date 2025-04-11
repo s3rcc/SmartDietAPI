@@ -151,6 +151,10 @@ namespace SmartDietAPI.Services
                 Console.WriteLine("Kết thúc mapping DishResponse"); // Log 5
                 return dishResponses;
             }
+            catch(ErrorException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 // Ghi log exception gốc để debug

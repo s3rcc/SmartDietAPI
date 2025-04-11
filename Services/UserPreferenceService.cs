@@ -53,7 +53,7 @@ namespace Services
 
                 var userPreference = await _unitOfWork.Repository<UserPreference>().FirstOrDefaultAsync(x => x.SmartDietUserId == userId)
                                     ?? throw new ErrorException(
-                                        StatusCodes.Status404NotFound,
+                                        StatusCodes.Status403Forbidden,
                                         ErrorCode.NOT_FOUND,
                                         "User preference not found!");
 

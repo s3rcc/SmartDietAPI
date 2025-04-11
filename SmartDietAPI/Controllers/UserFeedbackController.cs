@@ -2,6 +2,7 @@
 using BusinessObjects.Entity;
 using DTOs.FavoriteDishDTOs;
 using DTOs.UserFeedbackDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.Interfaces;
@@ -18,28 +19,28 @@ namespace SmartDietAPI.Controllers
         {
             _userFeedbackService = userFeedbackService;
         }
-
+        [Authorize]
         [HttpGet("all")]
         public async Task<IActionResult> GetAllUserFeedbacks()
         {
             var result = await _userFeedbackService.GetAllUserFeedbackAsync();
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserFeedbackBySmartDietUserIds(string id)
         {
             var result = await _userFeedbackService.GetUserFeedbackBySmartDietUserIdAsync(id);
             return Ok(ApiResponse<object>.Success(result));
         }
-
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateUserFeedback(UserFeedbackDTO userFeedback)
         {
             await _userFeedbackService.CreateUserFeedbackAsync(userFeedback);
             return Ok(ApiResponse<object>.Success(null, "Created successfully", 201));
         }
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserFeedback(string id)
         {

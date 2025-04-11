@@ -186,7 +186,7 @@ namespace Services
                 IdentityRole? role = await _roleManager.FindByIdAsync(request.RoleID);
                 await _userManager.AddToRoleAsync(newUser, role.Name);
                 await _emailService.SendEmailAsync(request.Email, "Account employee",
-                      $"Your password: {passwordChars}");
+                      $"Your password: {passwordChars}", "NewStaff");
                 await _unitOfWork.Repository<UserProfile>().AddAsync(new UserProfile
                 {
                     SmartDietUserId = newUser.Id,

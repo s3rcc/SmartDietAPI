@@ -170,7 +170,7 @@ namespace Services
                 var foodResponses = _mapper.Map<List<FoodResponse>>(foods.Items);
                 return new BasePaginatedList<FoodResponse>(
                     foodResponses,
-                    foodResponses.Count,
+                    foods.TotalItems,
                     pageIndex,
                     pageSize);
             }

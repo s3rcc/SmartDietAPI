@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.FixedData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SmartDietAPI.Controllers
@@ -7,6 +8,7 @@ namespace SmartDietAPI.Controllers
     [ApiController]
     public class EnumController : ControllerBase
     {
+        [Authorize]
         [HttpGet("food-model")]
         public IActionResult GetFoodModelEnums()
         {
